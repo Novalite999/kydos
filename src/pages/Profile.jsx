@@ -18,7 +18,7 @@ export default function Profile() {
     load();
     return base44.entities.Profile.subscribe(load);
   }, [targetId]);
-  if (!userId && me === null) return <WalletConnectPrompt />;
+  if (!userId && (me === null || (me && !me.signedIn))) return <WalletConnectPrompt />;
   if (!targetId || profile === undefined) return <div className="mx-auto max-w-2xl"><Skeleton className="h-28"/><Skeleton className="h-20 w-20 rounded-full -mt-10 ml-4 ring-4 ring-background"/></div>;
   return <div className="mx-auto max-w-2xl min-h-screen border-x border-border/60">
     <ProfileHeader profile={profile} userId={targetId} isMe={isMe} onEdit={() => setEditing(true)}/>

@@ -1,4 +1,4 @@
-import { MARKET_CATALOG, MARKET_INTERVALS, MARKET_NETWORK, MARKET_SCHEMA, isSolanaMint, snapshotStatus } from '../../base44/shared/marketCatalog.js';
+import { MARKET_CATALOG, MARKET_INTERVALS, MARKET_NETWORK, MARKET_SCHEMA, isSolanaMint, snapshotStatus } from '../../server/shared/marketCatalog.js';
 
 export { MARKET_CATALOG, MARKET_INTERVALS, MARKET_NETWORK, isSolanaMint, snapshotStatus };
 export const MARKET_TABS = ['trending', 'majors', 'memes', 'kydos', 'watchlist'];

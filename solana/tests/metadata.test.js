@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeLaunchMetadataHandler, MAX_IMAGE_BYTES } from '../../base44/shared/launchMetadata.js';
+import { makeLaunchMetadataHandler, MAX_IMAGE_BYTES } from '../../server/shared/launchMetadata.js';
 import { uploadLaunchMetadata, validateLaunchImage } from '../../src/lib/solana/launchMetadata.js';
 
 const cid = 'bafybeihgxdzljxb26q6nf3r3eifqeedsvt2eubqtskghpme66cgjyw4fra';

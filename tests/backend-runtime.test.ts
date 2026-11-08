@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { Connection, Keypair, TransactionMessage, VersionedTransaction, PublicKey } from 'npm:@solana/web3.js@1.98.4';
-import { getTradeOrder, executeTrade, SOL, USDC } from '../base44/shared/jupiterTrading.js';
-import { rpcCall, readEventWindow } from '../base44/shared/solanaIndex.js';
-import { beforeDeadline } from '../base44/shared/astraDeadline.ts';
+import { getTradeOrder, executeTrade, SOL, USDC } from '../server/shared/jupiterTrading.js';
+import { rpcCall, readEventWindow } from '../server/shared/solanaIndex.js';
+import { beforeDeadline } from '../server/shared/astraDeadline.ts';
 
 // No network/secret permissions. All fetches are in-process fixtures.
 const owner = Keypair.fromSeed(new Uint8Array(32).fill(3));

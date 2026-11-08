@@ -11,7 +11,7 @@ import { prepareDbcReview, submitDbcReview, discardDbcReview, dbcPriorityFee } f
 import { createActivityStore } from '../src/lib/solana/lifecycle.js';
 import { encodeSignature } from '../src/lib/solana/transactions.js';
 import { dbcExplorerUrl, dbcLaunchUrl } from '../src/lib/solana/dbcLinks.js';
-import { buildSolanaRpcPayload } from '../base44/shared/solanaRpc.js';
+import { buildSolanaRpcPayload } from '../server/shared/solanaRpc.js';
 import idl from '../src/lib/solana/idl/kydos_launchpad.json' with { type: 'json' };
 
 const fixture = readFileSync(new URL('../solana/dbc/fixtures/controller-config.bin', import.meta.url));

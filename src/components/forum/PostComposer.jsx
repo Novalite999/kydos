@@ -20,10 +20,10 @@ export default function PostComposer({ token: fixedToken, replyTo, placeholder =
   const [token, setToken] = useState(fixedToken || null);
   const [busy, setBusy] = useState(false);
 
-  if (me === null) {
+  if (me === null || (me && !me.signedIn)) {
     return (
       <button onClick={() => requireAuth("post")} className="w-full p-4 text-sm text-primary text-left border-b border-border hover:bg-card/60">
-        Connect Phantom to join the conversation →
+        {me ? 'Sign in with Phantom to join the conversation →' : 'Connect Phantom to join the conversation →'}
       </button>
     );
   }

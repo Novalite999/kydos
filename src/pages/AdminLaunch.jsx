@@ -10,7 +10,7 @@ const message = reason => reason?.response?.data?.error || reason.message;
 const sol = lamports => ((lamports || 0) / 1e9).toFixed(9);
 const resolved = state => ['confirmed', 'failed'].includes(state);
 export default function AdminLaunch() {
-  const [user, setUser] = useState(/** @type {import('@base44/sdk').User | null | undefined} */ (undefined));
+  const [user, setUser] = useState(/** @type {{ id: string; role: string } | null | undefined} */ (undefined));
   const [wallet, setWallet] = useState(/** @type {import('@/types/application').AdminWalletStatus | undefined} */ (undefined));
   const [form, setForm] = useState({ name: '', symbol: '', image: null });
   const [statusText, setStatusText] = useState(''), [busy, setBusy] = useState(false);

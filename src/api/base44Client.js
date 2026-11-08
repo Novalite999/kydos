@@ -1,12 +1,5 @@
-import { createClient } from '@base44/sdk';
-import { appParams } from '@/lib/app-params';
+// Kept so existing imports keep working; the app no longer uses Base44.
+// All calls go to this project's own API (see src/api/client.js and server/).
+import { api } from './client';
 
-const { appId, token, functionsVersion, appBaseUrl } = appParams;
-
-export const base44 = createClient({
-  appId,
-  token,
-  functionsVersion,
-  serverUrl: '',
-  appBaseUrl
-});
+export const base44 = api;

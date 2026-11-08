@@ -20,7 +20,7 @@ try {
   if (readFileSync(resolve(solana, '.program-id'), 'utf8').trim() !== id) throw new Error('Program ID stamp does not match the keypair.');
   const rust = readFileSync(resolve(solana, 'programs/kydos_launchpad/src/lib.rs'), 'utf8');
   const anchor = readFileSync(resolve(solana, 'Anchor.toml'), 'utf8');
-  const shared = readFileSync(resolve(root, 'base44/shared/solanaProtocol.js'), 'utf8');
+  const shared = readFileSync(resolve(root, 'server/shared/solanaProtocol.js'), 'utf8');
   const idl = JSON.parse(readFileSync(resolve(root, 'src/lib/solana/idl/kydos_launchpad.json'), 'utf8'));
   if (!rust.includes(`declare_id!("${id}")`) || !anchor.includes(`kydos_launchpad = "${id}"`) || !shared.includes(`PROGRAM_ADDRESS = '${id}'`) || idl.address !== id) throw new Error('Program ID differs across keypair, Rust, Anchor, server config or browser IDL. Complete step 02 and IDL sync first.');
   const endpoint = process.env.HELIUS_RPC_URL?.trim();

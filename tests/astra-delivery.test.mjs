@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { ASTRA_WORKING_BRANCH, createBranch, commitFile, resetWorkingBranch } from '../base44/shared/astraGithub.ts';
-import { repositoryToolSchemas, runTool } from '../base44/shared/astraTools.ts';
-import { ASTRA_SYSTEM_PROMPT } from '../base44/shared/astraPrompt.ts';
+import { ASTRA_WORKING_BRANCH, createBranch, commitFile, resetWorkingBranch } from '../server/shared/astraGithub.ts';
+import { repositoryToolSchemas, runTool } from '../server/shared/astraTools.ts';
+import { ASTRA_SYSTEM_PROMPT } from '../server/shared/astraPrompt.ts';
 
 const repo = 'doji0x/kydosv1';
 const head = '/git/ref/heads/astra%2Flatest';

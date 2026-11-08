@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
-import { identifySolanaNetwork } from '../../../base44/shared/solanaNetwork.js';
-export { identifySolanaNetwork as dbcNetwork } from '../../../base44/shared/solanaNetwork.js';
+import { identifySolanaNetwork } from '../../../server/shared/solanaNetwork.js';
+export { identifySolanaNetwork as dbcNetwork } from '../../../server/shared/solanaNetwork.js';
 
 export function dbcExplorerUrl(kind, value, chain) {
   if (!['tx', 'token', 'account'].includes(kind)) throw new Error('Invalid explorer target');

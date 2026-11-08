@@ -1,7 +1,7 @@
 import { VersionedTransaction } from '@solana/web3.js';
 import { formatAmount } from './market.js';
 
-import { SOLANA_NETWORKS } from '../../../base44/shared/solanaNetwork.js';
+import { SOLANA_NETWORKS } from '../../../server/shared/solanaNetwork.js';
 export const LAUNCH_NETWORKS = SOLANA_NETWORKS;
 
 const networkName = chain => LAUNCH_NETWORKS[chain]?.name || 'the selected Solana network';

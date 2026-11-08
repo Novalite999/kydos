@@ -1,4 +1,4 @@
-import { PublicKey, VersionedTransaction } from 'npm:@solana/web3.js@1.98.4';
+import { PublicKey, VersionedTransaction } from '@solana/web3.js';
 
 export const SOL = 'So11111111111111111111111111111111111111112';
 export const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';

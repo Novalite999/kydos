@@ -24,16 +24,16 @@ test('unknown files and suppressed active source fail closed', t => {
   put('unexpected/new.js','export const value=1;');
   assert.throws(()=>sourceInventory(root),/not assigned/);
   rmSync(join(root,'unexpected'),{recursive:true});
-  put('base44/shared/new.js','// @ts-nocheck\nexport const value=1;');
+  put('server/shared/new.js','// @ts-nocheck\nexport const value=1;');
   assert.throws(()=>sourceInventory(root),/Suppressed/);
 });
 test('historical source remains byte-pinned and cannot enter the active graph', t => {
   const old='export const old=1;';
   const {root,put}=fixture(t,{schemaVersion:1,files:{'draft/old.js':{sha256:createHash('sha256').update(old).digest('hex'),reason:'fixture'}},archives:[]});
   put('draft/old.js',old); assert.equal(sourceInventory(root).historical.length,1);
-  put('base44/shared/new.js',"import '../../draft/old.js';");
+  put('server/shared/new.js',"import '../../draft/old.js';");
   assert.throws(()=>sourceInventory(root),/imports historical/);
-  put('base44/shared/new.js','export const okay=1;');put('draft/old.js',old+'\n');
+  put('server/shared/new.js','export const okay=1;');put('draft/old.js',old+'\n');
   assert.throws(()=>sourceInventory(root),/Historical source changed/);
 });
 test('archive manifest detects both content changes and newly added archived code', t => {
@@ -55,7 +55,7 @@ test('actual runtime contracts accept valid values and reject wrong result/argum
   const directory=mkdtempSync(resolve('typechecks/contract-'));
   t.after(()=>rmSync(directory,{recursive:true,force:true}));
   const path=join(directory,'test.ts'), options={...compilerConfig('typechecks/node.json').options};
-  const imports="import {beforeDeadline} from '../../base44/shared/astraDeadline.ts';\nimport {parseToolArgs} from '../../base44/shared/astraToolArgs.ts';\n";
+  const imports="import {beforeDeadline} from '../../server/shared/astraDeadline.ts';\nimport {parseToolArgs} from '../../server/shared/astraToolArgs.ts';\n";
   const valid="const value=await beforeDeadline(async()=>({count:1,cursor:'next'}),Date.now()+1000,'late');\nconst count:number=value.count;const cursor:string=value.cursor;\nconst args=parseToolArgs({limit:3});const limit:number|undefined=args.limit;\n";
   writeFileSync(path,imports+valid);
   assert.deepEqual(ts.getPreEmitDiagnostics(ts.createProgram([path],options)),[]);

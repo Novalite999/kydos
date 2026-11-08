@@ -1,5 +1,5 @@
 import test from 'node:test';
-import { PROGRAM_ADDRESS } from '../../base44/shared/solanaProtocol.js';
+import { PROGRAM_ADDRESS } from '../../server/shared/solanaProtocol.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { readSolanaDevelopmentConfig } from '../../src/lib/solana/index.js';

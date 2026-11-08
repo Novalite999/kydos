@@ -22,21 +22,29 @@ Kydos targets Solana exclusively. The active implementation uses Anchor programs
 
 ## Architecture
 
-`Phantom -> React/Vite client -> Anchor instructions -> Solana program`
+`Phantom -> React/Vite client -> Meteora DBC / Kydos instructions -> Solana`
 
-`Helius RPC/indexing -> Base44 functions -> Base44 entities -> market and activity views`
+`Browser -> /api (one Vercel Function, server/) -> Neon Postgres + Helius + Jupiter + Pinata`
 
-The on-chain workspace lives in `solana/`. Client adapters live in `src/lib/solana/`; Solana pages live in `src/pages/SolanaLaunch.jsx` and `src/pages/SolanaMarket.jsx`.
+Base44 has been removed. The app now runs on Vercel and Neon:
+
+- `api/router.js` is the single Vercel Function; `server/router.js` serves every `/api/*` route.
+- `server/entities.js` stores app records (posts, likes, follows, profiles, trades, candles) in one Postgres JSONB table, created automatically on first request.
+- `server/auth.js` signs users in with their wallet: Phantom signs a free text message and the server sets a 30-day session cookie. Admins are the wallets listed in `ADMIN_WALLETS`.
+- `server/functions/` holds the market, chart, trading, RPC relay and launch handlers; `server/shared/` holds their logic.
+- `src/api/client.js` is the browser client used by every page.
+- `base44/` keeps only the old entity schemas and functions for reference; nothing there is deployed.
 
 ## Local development
 
-1. Install committed dependencies with `npm ci`.
-2. Configure a local Solana validator and Anchor toolchain using `solana/README.md`.
-3. Set the required Solana and Helius environment values through the platform secret manager.
-4. Run the web app with `npm run dev`.
-5. Read the [launch form setup](solana/README.md#launch-form-and-public-metadata) before configuring Phantom. For the mainnet-capable DBC launch flow, follow `docs/dbc-mainnet.md`; the form is public but signing requires a verified release manifest.
+1. `npm ci`
+2. Copy `.env.example` to `.env.local` and fill in `DATABASE_URL` and `SESSION_SECRET` (or run offline with `PGLITE=1`).
+3. In one terminal run `npm run dev:api`; in another run `npm run dev`. Vite proxies `/api` to the local API.
+4. `npm run test:api` runs the API tests against an in-memory Postgres.
 
-The checked-in Solana UI is intentionally explicit about confirmed state, stale quotes, slippage, and transaction recovery. Do not treat local-validator behavior as production readiness.
+## Deploying on Vercel
+
+Import the GitHub repo in Vercel (framework: Vite). Set the server variables from `.env.example` in Project Settings, then deploy. `vercel.json` routes `/api/*` to the function and everything else to the app.
 
 ## Mainnet DBC launches
 

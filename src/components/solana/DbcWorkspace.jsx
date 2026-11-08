@@ -178,7 +178,7 @@ export default function DbcWorkspace() {
         <label className="block space-y-2 text-sm" htmlFor="dbc-image"><span>Token image (PNG, JPG or WebP, up to 5 MB)</span><Input id="dbc-image" type="file" accept="image/png,image/jpeg,image/webp" disabled={busy || !!review || !!result} onChange={chooseImage}/></label>
         {imagePreview && <div className="flex items-center gap-4"><img src={imagePreview} alt="Selected token artwork" className="h-24 w-24 rounded-xl object-cover"/><p className="min-w-0 break-all text-xs text-muted-foreground">{file.name}</p></div>}
         <p className="text-xs text-muted-foreground">Review uploads the image and metadata publicly to IPFS before requesting wallet approval. Files are not removed if you cancel the launch.</p>
-        {!auth.isAuthenticated && <p className="text-sm"><Link to="/login" className="underline">Sign in to upload artwork</Link>, or use an existing metadata URI without signing in. Phantom connection and website sign-in are separate.</p>}
+        {!auth.isAuthenticated && <p className="text-sm"><Link to="/login" className="underline">Sign in with Phantom to upload artwork</Link>, or use an existing metadata URI without signing in. Signing in uses the same Phantom wallet.</p>}
       </div>}
       <p className="text-xs text-muted-foreground">1B initial supply: 793.1M nominal curve allocation and 206.9M migration allocation. Creation only; no initial purchase is added or charged.</p>
       {!review && !result && <Button type="submit" disabled={blocked || (!form.manualMetadata && (!file || !auth.isAuthenticated))}>Review token launch</Button>}

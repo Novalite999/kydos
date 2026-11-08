@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { requireMainnetNetwork, identifySolanaNetwork, inspectLaunchNetwork } from '../base44/shared/solanaNetwork.js';
-import { readNetwork } from '../base44/shared/solanaIndex.js';
-import { relayMainnetRpc } from '../base44/shared/solanaRpcRelay.js';
+import { requireMainnetNetwork, identifySolanaNetwork, inspectLaunchNetwork } from '../server/shared/solanaNetwork.js';
+import { readNetwork } from '../server/shared/solanaIndex.js';
+import { relayMainnetRpc } from '../server/shared/solanaRpcRelay.js';
 const mainnet = '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d';
 const devnet = 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG';
 const endpoint = 'https://example.invalid/private-provider-token';

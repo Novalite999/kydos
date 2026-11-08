@@ -1,138 +1,60 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { appParams } from '@/lib/app-params';
+// Website sign-in = a signed message from the connected Solana wallet.
+// The session cookie is only trusted while that same wallet stays connected.
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { api } from '@/api/client';
+import { useSolanaWallet } from '@/lib/SolanaWalletContext';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
+  const wallet = useSolanaWallet();
+  const walletId = wallet.publicKey?.toBase58() || null;
+  const [session, setSession] = useState(undefined); // undefined = still checking
   const [authError, setAuthError] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
-  useEffect(() => {
-    checkAppState();
+  const checkUserAuth = useCallback(async () => {
+    try { setSession(await api.auth.me()); } catch { setSession(null); }
   }, []);
 
-  const checkAppState = async () => {
+  useEffect(() => { checkUserAuth(); return api.auth.onChange(user => setSession(user)); }, [checkUserAuth]);
+
+  // A session for a different wallet than the one connected is not used.
+  const user = session && walletId && session.id === walletId ? session : null;
+  const isLoadingAuth = session === undefined;
+
+  const signIn = useCallback(async () => {
+    setAuthError(null);
     try {
-      setIsLoadingPublicSettings(true);
-      setAuthError(null);
-      
-      try {
-        const publicSettings = await base44.app.getPublicSettings();
-        setAppPublicSettings(publicSettings);
-        
-        // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
-        setIsLoadingPublicSettings(false);
-      } catch (appError) {
-        console.error('App state check failed:', appError);
-        
-        // Handle app-level errors
-        if (appError.status === 403 && appError.data?.extra_data?.reason) {
-          const reason = appError.data.extra_data.reason;
-          if (reason === 'auth_required') {
-            setAuthError({
-              type: 'auth_required',
-              message: 'Authentication required'
-            });
-          } else if (reason === 'user_not_registered') {
-            setAuthError({
-              type: 'user_not_registered',
-              message: 'User not registered for this app'
-            });
-          } else {
-            setAuthError({
-              type: reason,
-              message: appError.message
-            });
-          }
-        } else {
-          setAuthError({
-            type: 'unknown',
-            message: appError.message || 'Failed to load app'
-          });
-        }
-        setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-      }
+      const key = wallet.publicKey || await wallet.connect();
+      const id = key.toBase58();
+      if (session?.id === id) return session;
+      return await api.auth.signInWithWallet(id, wallet.signMessage);
     } catch (error) {
-      console.error('Unexpected error:', error);
-      setAuthError({
-        type: 'unknown',
-        message: error.message || 'An unexpected error occurred'
-      });
-      setIsLoadingPublicSettings(false);
-      setIsLoadingAuth(false);
+      setAuthError({ type: 'sign_in_failed', message: error.message });
+      throw error;
     }
-  };
+  }, [wallet, session]);
 
-  const checkUserAuth = async () => {
-    try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
-    } catch (error) {
-      console.error('User auth check failed:', error);
-      setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
-    }
-  };
-
-  const logout = (shouldRedirect = true) => {
-    setUser(null);
-    setIsAuthenticated(false);
-    
-    if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout(window.location.href);
-    } else {
-      // Just remove the token without redirect
-      base44.auth.logout();
-    }
-  };
-
-  const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
-  };
+  const logout = useCallback(async (shouldRedirect = false) => {
+    await api.auth.logout(shouldRedirect ? '/' : undefined);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
+    <AuthContext.Provider value={{
+      user,
+      sessionWallet: session?.id || null,
+      isAuthenticated: !!user,
+      isAdmin: user?.role === 'admin',
       isLoadingAuth,
-      isLoadingPublicSettings,
+      isLoadingPublicSettings: false,
+      authChecked: !isLoadingAuth,
       authError,
-      appPublicSettings,
-      authChecked,
+      appPublicSettings: { id: 'kydos', public_settings: {} },
+      signIn,
       logout,
-      navigateToLogin,
+      navigateToLogin: () => api.auth.redirectToLogin(window.location.href),
       checkUserAuth,
-      checkAppState
+      checkAppState: checkUserAuth,
     }}>
       {children}
     </AuthContext.Provider>
@@ -141,8 +63,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAX_REFERENCE_BYTES, boundedText, contentHash, documentQuality, fetchPublicDocument, pageInteger, publicDocumentUrl, referencePage, referenceSummary } from '../base44/shared/astraReferences.ts';
+import { MAX_REFERENCE_BYTES, boundedText, contentHash, documentQuality, fetchPublicDocument, pageInteger, publicDocumentUrl, referencePage, referenceSummary } from '../server/shared/astraReferences.ts';
 
 // Pure helpers and mocked HTTP only: no external network, storage or paid calls.
 test('GitHub blob files resolve to raw sources; unsupported URLs fail closed', () => {

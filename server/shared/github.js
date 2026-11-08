@@ -1,26 +1,21 @@
-// Shared GitHub API helper for the deployment-release log.
-import { secrets } from "base44:runtime";
-
-const DEFAULT_REPO = "doji0x/kydosv1";
+// Shared GitHub API helper for the releases page (admin only).
+const DEFAULT_REPO = "Novalite999/kydos";
 
 export function repoSlug() {
-  try {
-    const configured = secrets.get("GH_REPO");
-    return configured && configured.includes("/") ? configured : DEFAULT_REPO;
-  } catch {
-    return DEFAULT_REPO;
-  }
+  const configured = process.env.GH_REPO;
+  return configured && configured.includes("/") ? configured : DEFAULT_REPO;
 }
 
-export async function assertGithubAdmin(base44) {
-  const user = await base44.auth.me().catch(() => null);
+export async function assertGithubAdmin(ctx) {
+  const user = await ctx.auth.me().catch(() => null);
   if (user?.role === "admin") return null;
   return Response.json({ error: "Forbidden" }, { status: 403 });
 }
 
-export async function githubToken(base44) {
-  const { accessToken } = await base44.asServiceRole.connectors.getConnection("github");
-  return accessToken;
+export async function githubToken() {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) throw Object.assign(new Error("GITHUB_TOKEN is not configured on the server."), { status: 503 });
+  return token;
 }
 
 export async function githubApi(token, path, options = {}) {

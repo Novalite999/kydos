@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { buildCreateTransaction, CURVE_SPACE, FEE_POLICY_SPACE, METADATA_SPACE, METADATA_PROGRAM_ID, PROGRAM_ID, sendTransaction } from './client.js';
 import { estimateTransactionCosts } from './costs.js';
-import { inspectLaunchNetwork } from '../../../base44/shared/solanaNetwork.js';
+import { inspectLaunchNetwork } from '../../../server/shared/solanaNetwork.js';
 export { LAUNCH_NETWORKS } from './preflight.js';
 
 export const getLaunchAvailability = connection => inspectLaunchNetwork(connection, PROGRAM_ID, METADATA_PROGRAM_ID);

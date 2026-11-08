@@ -1,7 +1,7 @@
 // Read-only. Never prints the endpoint/key or submits a transaction.
 import { Connection, PublicKey } from '@solana/web3.js';
-import { inspectLaunchNetwork } from '../../base44/shared/solanaNetwork.js';
-import { PROGRAM_ADDRESS } from '../../base44/shared/solanaProtocol.js';
+import { inspectLaunchNetwork } from '../../server/shared/solanaNetwork.js';
+import { PROGRAM_ADDRESS } from '../../server/shared/solanaProtocol.js';
 const endpoint = process.env.HELIUS_RPC_URL;
 if (!endpoint) throw new Error('HELIUS_RPC_URL is required');
 try {

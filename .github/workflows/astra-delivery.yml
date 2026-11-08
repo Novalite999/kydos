@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, 'astra/latest']
     paths:
-      - 'base44/shared/astra*.ts'
+      - 'server/shared/astra*.ts'
       - 'base44/functions/astraChat/**'
       - 'base44/functions/astraWorker/**'
       - 'base44/functions/astraReference/**'
@@ -17,7 +17,7 @@ on:
   pull_request:
     branches: [main, 'astra/latest']
     paths:
-      - 'base44/shared/astra*.ts'
+      - 'server/shared/astra*.ts'
       - 'base44/functions/astraChat/**'
       - 'base44/functions/astraWorker/**'
       - 'base44/functions/astraReference/**'

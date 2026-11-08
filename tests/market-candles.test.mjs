@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MARKET_CATALOG } from '../base44/shared/marketCatalog.js';
-import { CandleError, chartInput, readJupiterCandles } from '../base44/shared/marketCandles.js';
-import { nextSampleCandle } from '../base44/shared/jupiterCandleMath.js';
+import { MARKET_CATALOG } from '../server/shared/marketCatalog.js';
+import { CandleError, chartInput, readJupiterCandles } from '../server/shared/marketCandles.js';
+import { nextSampleCandle } from '../server/shared/jupiterCandleMath.js';
 import { validateCandlePage } from '../src/lib/marketCandles.js';
 
 const mint = MARKET_CATALOG[0].mint, first = 1790232480000;

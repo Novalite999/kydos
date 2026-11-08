@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const root = new URL('../../', import.meta.url);
 const load = async path => import(`data:text/javascript;base64,${Buffer.from(readFileSync(new URL(path, root), 'utf8')).toString('base64')}`);
-const { strictTool } = await load('base44/shared/astraSchemas.ts');
-const { compactForModel } = await load('base44/shared/astraLimits.ts');
-const { trainingMessages, validateTrainingExample } = await load('base44/shared/astraTraining.ts');
+const { strictTool } = await load('server/shared/astraSchemas.ts');
+const { compactForModel } = await load('server/shared/astraLimits.ts');
+const { trainingMessages, validateTrainingExample } = await load('server/shared/astraTraining.ts');
 test('strict tools preserve optional semantics with null and forbid unknown keys', () => {
   const result = strictTool({ type:'function', function:{ name:'read', parameters:{type:'object',properties:{id:{type:'string'},limit:{type:'integer'}},required:['id']} } });
   assert.equal(result.function.strict,true); assert.equal(result.function.parameters.additionalProperties,false);

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MARKET_CATALOG } from '../base44/shared/marketCatalog.js';
-import { fetchJupiterPrices } from '../base44/shared/jupiterPrices.js';
-import { fetchMarketSnapshot } from '../base44/shared/jupiterMarkets.js';
+import { MARKET_CATALOG } from '../server/shared/marketCatalog.js';
+import { fetchJupiterPrices } from '../server/shared/jupiterPrices.js';
+import { fetchMarketSnapshot } from '../server/shared/jupiterMarkets.js';
 import { readMarketOptions, selectMarkets } from '../src/lib/markets.js';
 
 const mint = MARKET_CATALOG[0].mint;

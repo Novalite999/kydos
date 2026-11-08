@@ -7,9 +7,9 @@ import * as web3 from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { buildCreateTransaction, PROGRAM_ID, METADATA_PROGRAM_ID, CURVE_SPACE, FEE_POLICY_SPACE, METADATA_SPACE } from '../../src/lib/solana/client.js';
 import { estimateTransactionCosts } from '../../src/lib/solana/costs.js';
-import { buildAdminLaunchTransaction, estimateAdminLaunchCosts, requireAdminFunds, adminSimulationError } from '../../base44/shared/adminLaunch.js';
-import { identifySolanaNetwork, inspectLaunchNetwork } from '../../base44/shared/solanaNetwork.js';
-import { PROGRAM_ADDRESS } from '../../base44/shared/solanaProtocol.js';
+import { buildAdminLaunchTransaction, estimateAdminLaunchCosts, requireAdminFunds, adminSimulationError } from '../../server/shared/adminLaunch.js';
+import { identifySolanaNetwork, inspectLaunchNetwork } from '../../server/shared/solanaNetwork.js';
+import { PROGRAM_ADDRESS } from '../../server/shared/solanaProtocol.js';
 const chain = '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d', network = identifySolanaNetwork(chain), signer = web3.Keypair.generate();
 function rpc() { return { getLatestBlockhash: async () => ({ blockhash: web3.Keypair.generate().publicKey.toBase58() }), getBalance: async () => 1000000000, getFeeForMessage: async () => ({ value: 10000 }), getMinimumBalanceForRentExemption: async size => size * 17 + 10 }; }
 test('admin initialize, fee-policy account, signatures and costs match the Anchor client', async () => {

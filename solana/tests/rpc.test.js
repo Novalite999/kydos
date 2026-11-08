@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Connection, Keypair, Transaction } from '@solana/web3.js';
 import { Buffer } from 'buffer';
-import { buildSolanaRpcPayload } from '../../base44/shared/solanaRpc.js';
+import { buildSolanaRpcPayload } from '../../server/shared/solanaRpc.js';
 import { createProxyFetch } from '../../src/lib/solana/rpc.js';
 import { confirmTransactionHttp } from '../../src/lib/solana/transactions.js';
 import { buildCreateTransaction, CURVE_SPACE, FEE_POLICY_SPACE, METADATA_SPACE } from '../../src/lib/solana/client.js';

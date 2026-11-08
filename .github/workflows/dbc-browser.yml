@@ -2,9 +2,9 @@ name: DBC browser integration
 on:
   push:
     branches: [codex/meteora-dbc-integration]
-    paths: ['src/lib/solana/**', 'src/components/solana/DbcWorkspace.jsx', 'src/pages/SolanaLaunch.jsx', 'base44/shared/solanaRpc.js', 'solana/dbc/**', 'tests/dbc-browser.test.mjs', '.github/workflows/dbc-browser.yml', 'package*.json']
+    paths: ['src/lib/solana/**', 'src/components/solana/DbcWorkspace.jsx', 'src/pages/SolanaLaunch.jsx', 'server/shared/solanaRpc.js', 'solana/dbc/**', 'tests/dbc-browser.test.mjs', '.github/workflows/dbc-browser.yml', 'package*.json']
   pull_request:
-    paths: ['src/lib/solana/**', 'src/components/solana/DbcWorkspace.jsx', 'src/pages/SolanaLaunch.jsx', 'base44/shared/solanaRpc.js', 'solana/dbc/**', 'tests/dbc-browser.test.mjs', '.github/workflows/dbc-browser.yml', 'package*.json']
+    paths: ['src/lib/solana/**', 'src/components/solana/DbcWorkspace.jsx', 'src/pages/SolanaLaunch.jsx', 'server/shared/solanaRpc.js', 'solana/dbc/**', 'tests/dbc-browser.test.mjs', '.github/workflows/dbc-browser.yml', 'package*.json']
 permissions:
   contents: read
 jobs:

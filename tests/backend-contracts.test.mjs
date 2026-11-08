@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { beforeDeadline } from '../base44/shared/astraDeadline.ts';
-import { parseToolArgs } from '../base44/shared/astraToolArgs.ts';
-import { commitFile, ASTRA_WORKING_BRANCH } from '../base44/shared/astraGithub.ts';
-import { runTool } from '../base44/shared/astraTools.ts';
+import { beforeDeadline } from '../server/shared/astraDeadline.ts';
+import { parseToolArgs } from '../server/shared/astraToolArgs.ts';
+import { commitFile, ASTRA_WORKING_BRANCH } from '../server/shared/astraGithub.ts';
+import { runTool } from '../server/shared/astraTools.ts';
 import { runManagerWithGithub } from '../base44/functions/astraChat/githubChat.ts';
 
 const head = 'a'.repeat(40), other = 'b'.repeat(40), repo = 'doji0x/kydosv1';

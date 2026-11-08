@@ -11,7 +11,7 @@ const stamp = resolve(solana, '.program-id');
 const targets = [
   ['solana/programs/kydos_launchpad/src/lib.rs', /declare_id!\("([1-9A-HJ-NP-Za-km-z]{32,44})"\)/g, id => `declare_id!("${id}")`],
   ['solana/Anchor.toml', /^(kydos_launchpad = ")[1-9A-HJ-NP-Za-km-z]{32,44}(".*)$/gm, id => `kydos_launchpad = "${id}"`],
-  ['base44/shared/solanaProtocol.js', /^(export const PROGRAM_ADDRESS = ')[1-9A-HJ-NP-Za-km-z]{32,44}(';.*)$/gm, id => `export const PROGRAM_ADDRESS = '${id}';`],
+  ['server/shared/solanaProtocol.js', /^(export const PROGRAM_ADDRESS = ')[1-9A-HJ-NP-Za-km-z]{32,44}(';.*)$/gm, id => `export const PROGRAM_ADDRESS = '${id}';`],
 ];
 try {
   console.log('== Update Kydos program identity ==');
@@ -28,6 +28,6 @@ try {
     return { name, path, after };
   });
   for (const { name, path, after } of edits) { writeFileSync(path, after); console.log(`Updated ${name}`); }
-  console.log(`\nProgram ID: ${id}\nThe admin launcher imports PROGRAM_ADDRESS from base44/shared/solanaProtocol.js (there is no hardcoded ID in its function).`);
+  console.log(`\nProgram ID: ${id}\nThe admin launcher imports PROGRAM_ADDRESS from server/shared/solanaProtocol.js (there is no hardcoded ID in its function).`);
   console.log('NEXT: Regenerate and sync the browser IDL (see solana/docs/deployment.md), check tests, commit the changed source/IDL, and publish the updated app and admin launch function.');
 } catch (error) { console.error(error.message); process.exitCode = 1; }
