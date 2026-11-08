@@ -127,8 +127,9 @@ export async function handle(req) {
     if (section === 'upload' && req.method === 'POST') return await upload(req);
     if (section === 'files' && req.method === 'GET') return await file(rest[0]);
     if (section === 'functions') {
-      const handler = FUNCTIONS[rest[0]];
-      if (!handler) throw fail('This feature is not available on this server.', 404);
+      const load = Object.hasOwn(FUNCTIONS, rest[0]) ? FUNCTIONS[rest[0]] : null;
+      if (!load) throw fail('This feature is not available on this server.', 404);
+      const { default: handler } = await load();
       return await handler(req, contextFor(req));
     }
     throw fail('Not found.', 404);
