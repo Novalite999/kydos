@@ -1,0 +1,4 @@
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import { LoaderCircle } from 'lucide-react';
+export default function AstraMessageList({messages,loading}){if(loading)return <LoaderCircle className="mx-auto animate-spin text-primary"/>;return <div className="space-y-4">{messages.map(m=>m.role==='activity'?<div key={m.id} className="border-l border-primary/30 pl-3 font-mono text-xs text-muted-foreground">{m.content}</div>:<div key={m.id} className={m.role==='user'?'ml-auto max-w-[88%] rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-sm text-primary-foreground':'max-w-none rounded-2xl border border-border bg-card px-4 py-3 text-sm'}>{m.role==='assistant'?<ReactMarkdown>{m.content}</ReactMarkdown>:m.content}</div>)}</div>}
