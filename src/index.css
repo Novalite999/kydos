@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3%;
+    --foreground: 40 20% 94%;
+    --card: 0 0% 6%;
+    --card-foreground: 40 20% 94%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 40 20% 94%;
+    --primary: 42 96% 56%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 40 20% 94%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 40 8% 58%;
+    --accent: 42 96% 56%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 13%;
+    --input: 0 0% 13%;
+    --ring: 42 96% 56%;
+    --chart-1: 42 96% 56%;
+    --chart-2: 150 60% 45%;
+    --chart-3: 0 72% 55%;
+    --chart-4: 200 60% 55%;
+    --chart-5: 280 60% 60%;
+    --radius: 0.75rem;
+    --font-heading: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 40 20% 94%;
+    --sidebar-primary: 42 96% 56%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 40 20% 94%;
+    --sidebar-border: 0 0% 13%;
+    --sidebar-ring: 42 96% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(42 96% 56% / 0.10), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: hsl(42 96% 56% / 0.35);
+  }
+}
+
+@layer utilities {
+  .gold-text {
+    background: linear-gradient(120deg, #f8d77a 0%, #f2b429 50%, #c98a12 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gold-glow {
+    box-shadow: 0 0 0 1px hsl(42 96% 56% / 0.35), 0 0 32px -8px hsl(42 96% 56% / 0.45);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+  .grid-lines {
+    background-image:
+      linear-gradient(hsl(42 96% 56% / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(42 96% 56% / 0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+}
