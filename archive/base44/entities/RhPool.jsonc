@@ -1,0 +1,116 @@
+{
+  "name": "RhPool",
+  "type": "object",
+  "description": "A discovered liquidity pool with canonical trust controls.",
+  "properties": {
+    "chain_id": {
+      "type": "number",
+      "default": 46630
+    },
+    "address": {
+      "type": "string"
+    },
+    "token_address": {
+      "type": "string"
+    },
+    "venue": {
+      "type": "string",
+      "enum": [
+        "uniswap_v2",
+        "uniswap_v3",
+        "uniswap_v4",
+        "rialto",
+        "kydos_curve"
+      ]
+    },
+    "pool_manager": {
+      "type": "string"
+    },
+    "hook_address": {
+      "type": "string"
+    },
+    "position_id": {
+      "type": "string"
+    },
+    "token0": {
+      "type": "string"
+    },
+    "token1": {
+      "type": "string"
+    },
+    "base_is_token0": {
+      "type": "boolean"
+    },
+    "quote_address": {
+      "type": "string"
+    },
+    "quote_symbol": {
+      "type": "string"
+    },
+    "quote_decimals": {
+      "type": "number",
+      "default": 18
+    },
+    "base_decimals": {
+      "type": "number",
+      "default": 18
+    },
+    "fee": {
+      "type": "number"
+    },
+    "tick_spacing": {
+      "type": "number"
+    },
+    "sqrt_price_x96": {
+      "type": "string"
+    },
+    "current_tick": {
+      "type": "number"
+    },
+    "reserve_base": {
+      "type": "number"
+    },
+    "reserve_quote": {
+      "type": "number"
+    },
+    "liquidity_usd": {
+      "type": "number"
+    },
+    "launchpad_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "liquidity_locked": {
+      "type": "boolean",
+      "default": false
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "discovered_at": {
+      "type": "number"
+    },
+    "trust_status": {
+      "type": "string",
+      "enum": [
+        "TRUSTED",
+        "PROBATION",
+        "SUSPENDED"
+      ],
+      "default": "TRUSTED"
+    },
+    "suspended_until": {
+      "type": "number"
+    },
+    "suspension_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "chain_id",
+    "address",
+    "token_address",
+    "venue"
+  ]
+}

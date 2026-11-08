@@ -1,0 +1,55 @@
+{
+  "name": "Trade",
+  "type": "object",
+  "properties": {
+    "token_id": {
+      "type": "string"
+    },
+    "ticker": {
+      "type": "string"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "buy",
+        "sell"
+      ]
+    },
+    "quote_amount": {
+      "type": "number",
+      "description": "Native ETH spent or received"
+    },
+    "hood_amount": {
+      "type": "number",
+      "description": "Legacy quote amount retained for existing records"
+    },
+    "token_amount": {
+      "type": "number"
+    },
+    "price": {
+      "type": "number",
+      "description": "ETH per token after trade"
+    },
+    "market_cap": {
+      "type": "number",
+      "description": "Market cap in ETH after trade"
+    },
+    "trader": {
+      "type": "string"
+    },
+    "trader_id": {
+      "type": "string"
+    },
+    "tx_hash": {
+      "type": "string"
+    },
+    "block_number": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "token_id",
+    "side",
+    "token_amount"
+  ]
+}

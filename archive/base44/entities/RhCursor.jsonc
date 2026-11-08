@@ -1,0 +1,33 @@
+{
+  "name": "RhCursor",
+  "type": "object",
+  "description": "Tracks forward indexing and paginated historical backfills so every chain range is processed once.",
+  "properties": {
+    "scope": {
+      "type": "string",
+      "description": "Chain-prefixed cursor key"
+    },
+    "chain_id": {
+      "type": "number",
+      "default": 46630
+    },
+    "last_block": {
+      "type": "number",
+      "default": 0
+    },
+    "page_key": {
+      "type": "string"
+    },
+    "complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "updated_at": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "scope",
+    "chain_id"
+  ]
+}

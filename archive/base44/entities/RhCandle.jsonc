@@ -1,0 +1,76 @@
+{
+  "name": "RhCandle",
+  "type": "object",
+  "description": "OHLCV bar rolled up from trusted RhTrade records.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "<chain>-<token>-<interval>-<bucket_start>"
+    },
+    "chain_id": {
+      "type": "number",
+      "default": 46630
+    },
+    "token_address": {
+      "type": "string"
+    },
+    "interval": {
+      "type": "string",
+      "enum": [
+        "1m",
+        "5m",
+        "15m",
+        "1h",
+        "1d"
+      ]
+    },
+    "bucket_start": {
+      "type": "number"
+    },
+    "open": {
+      "type": "number"
+    },
+    "high": {
+      "type": "number"
+    },
+    "low": {
+      "type": "number"
+    },
+    "close": {
+      "type": "number"
+    },
+    "volume_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "trades": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED",
+        "SUSPECT",
+        "QUARANTINED",
+        "REPAIRED",
+        "INVALID"
+      ],
+      "default": "VERIFIED"
+    },
+    "revision": {
+      "type": "number",
+      "default": 1
+    },
+    "verification_method": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "uid",
+    "chain_id",
+    "token_address",
+    "interval",
+    "bucket_start"
+  ]
+}
