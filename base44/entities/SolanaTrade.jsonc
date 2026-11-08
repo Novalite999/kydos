@@ -1,0 +1,127 @@
+{
+  "name": "SolanaTrade",
+  "type": "object",
+  "description": "Finalized public on-chain Kydos events; readers deduplicate canonical event_id before aggregation.",
+  "properties": {
+    "signature": {
+      "type": "string"
+    },
+    "mint": {
+      "type": "string"
+    },
+    "wallet": {
+      "type": "string"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "buy",
+        "sell",
+        "launch",
+        "graduate"
+      ]
+    },
+    "sol_amount": {
+      "type": "number"
+    },
+    "token_amount": {
+      "type": "number"
+    },
+    "slot": {
+      "type": "number"
+    },
+    "block_time": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "failed"
+      ]
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "chain": {
+      "type": "string"
+    },
+    "program": {
+      "type": "string"
+    },
+    "order_key": {
+      "type": "string"
+    },
+    "commitment": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "sol_raw": {
+      "type": "string"
+    },
+    "token_raw": {
+      "type": "string"
+    },
+    "gross_sol_raw": {
+      "type": "string"
+    },
+    "net_sol_raw": {
+      "type": "string"
+    },
+    "fee_sol_raw": {
+      "type": "string"
+    },
+    "supply_raw": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "metadata_uri": {
+      "type": "string"
+    },
+    "event_index": {
+      "type": "number"
+    },
+    "transaction_index": {
+      "type": "number"
+    },
+    "decoder_version": {
+      "type": "number"
+    },
+    "decimals": {
+      "type": "number"
+    },
+    "graduated": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "signature",
+    "side",
+    "status"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

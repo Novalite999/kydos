@@ -1,0 +1,30 @@
+{
+  "name": "Profile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "handle": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "hood_balance": {
+      "type": "number",
+      "description": "In-app HOOD cash balance",
+      "default": 100
+    }
+  },
+  "required": [
+    "user_id",
+    "handle"
+  ]
+}

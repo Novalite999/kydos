@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "purpose": "Small navigation and resume record; not an execution engine, deployment authorization, or passing-check claim.",
+  "owner": "ChatGPT",
+  "delivery_branch": "codex/mainnet-backend-tooling",
+  "observed_source_sha": "f32b8fe45606f1f623b2974bc74dd70ac86ba53a",
+  "observed_upstream_sha": "2e361e82972a8aa0e6af137e205c611b92c7112c",
+  "active_task": {
+    "id": "backend-tooling-checks",
+    "request": "Continue approved mainnet completion at highest quality in one new branch.",
+    "status": "local-runtime-typechecks-and-regressions-pass-delivery-ci-required",
+    "scope": [
+      "base44/functions/astraChat",
+      "base44/shared",
+      "scripts/runtime-typecheck.mjs",
+      "solana/dbc",
+      "solana/scripts",
+      "typechecks",
+      "tests",
+      "package.json",
+      ".github/workflows/ci.yml",
+      ".github/workflows/runtime-typecheck.yml",
+      "docs/backend-tooling.md"
+    ],
+    "acceptance": "Zero diagnostics for explicit maintained frontend/backend/tooling scopes; frozen deps, no hidden exclusions, behavioral tests and unchanged protocol policy.",
+    "design_record": "docs/backend-tooling.md",
+    "next_action": "Inspect exact-head PR #37 checks after publication; do not merge/deploy. Then continue live evidence, trading/indexing and durable workers."
+  },
+  "read_policy": {
+    "startup": ["check delivery HEAD/checks", "read AGENTS.md", "read rolling checkpoint", "read this state when resuming"],
+    "default_task_file_budget": 5,
+    "budget_kind": "Soft initial task read budget, never a reason to skip safety-critical dependencies.",
+    "expand_only_for": ["named imports/callers", "relevant changed paths", "failing checks", "unresolved acceptance requirement"],
+    "avoid": ["whole-tree listings with known entry points", "rereading unchanged files", "restarting completed tasks", "polling pending checks without a reason"],
+    "invalidate": "Reinspect touched files on upstream/concurrent change; never overwrite unrelated work.",
+    "research_rule": "Complete required file ranges/inventory pages; persist exact returned cursors/hashes without inventing them."
+  },
+  "task_routes": {
+    "backend-tooling": {"start":["docs/backend-tooling.md","scripts/runtime-typecheck.mjs","typechecks/deno.json"],"focused_check":"npm run typecheck && npm run test:backend && npm run test:backend-runtime","evidence_status":"Passing local runtime-correct checks; exact-head CI required."},
+    "reference-research": {"start": ["docs/reference-index.md"], "only_if_implementation_changes": ["base44/shared/astraReferences.ts", "base44/functions/astraReference/entry.ts", "base44/functions/ingestReference/entry.ts"], "focused_check": "node --test tests/astra-references.test.mjs"},
+    "chat-tool-access": {"start": ["base44/functions/astraChat/githubChat.ts", "base44/shared/astraTools.ts"], "only_if_needed": ["base44/shared/astraGithub.ts", "base44/functions/astraChat/entry.ts"], "focused_check": "node --test tests/astra-delivery.test.mjs"},
+    "solana-transactions": {"start": ["src/lib/solana/client.js"], "only_if_needed": ["src/lib/solana/lifecycle.js", "src/lib/solana/budget.js", "src/lib/solana/costs.js"], "evidence_status": "Navigation only; behavior requires current verification."},
+    "solana-program": {"start": ["solana/programs/kydos_launchpad/src/lib.rs", "solana/programs/kydos_launchpad/Cargo.toml"], "evidence_status": "Read direct dependencies for program tasks, not unrelated docs work."},
+    "market-discovery": {"start": ["docs/market-discovery-rollout.md", "src/pages/Board.jsx"], "only_if_needed": ["base44/shared/jupiterMarkets.js", "base44/shared/marketDiscovery.js", "src/lib/markets.js", "src/pages/ExternalMarket.jsx"], "focused_check": "node --test tests/market-discovery.test.mjs"},
+    "market-charts": {"start": ["docs/interactive-market-charts.md", "src/components/markets/ExternalMarketChart.jsx"], "only_if_needed": ["src/hooks/useMarketCandles.js", "src/components/solana/MarketCandleChart.jsx", "base44/functions/marketCandles/entry.ts", "base44/shared/marketCandles.js"], "focused_check": "node --test tests/market-candles.test.mjs"},
+    "fee-settlement": {"start": ["docs/fee-settlement.md", "src/lib/solana/settlement.js", "solana/programs/kydos_launchpad/src/fees/settlement.rs"], "focused_check": "npm --prefix solana run test:settlement", "evidence_status": "Pure accounting helpers reused by the executable DBC controller; this older route alone is not fund movement."},
+    "permissionless-migration": {"start": ["docs/permissionless-migration.md", "solana/programs/kydos_launchpad/src/meteora/permissionless.rs"], "focused_check": "npm --prefix solana run test:permissionless", "evidence_status": "Historical pair-only preparation; do not enable as the protected destination."},
+    "protected-migration": {"start": ["docs/protected-migration.md", "solana/programs/kydos_launchpad/src/protected_migration.rs", "solana/tests/runtime/route-installation.mjs"], "only_if_needed": ["solana/scripts/protected-migration/inspect.mjs", "solana/scripts/protected-migration/evidence.mjs"], "focused_check": "npm --prefix solana run test:protected && npm --prefix solana run check:compatibility; built runtime: node solana/tests/runtime/route-installation.mjs", "evidence_status": "Historical installer only; NOT the selected DBC new-launch path. Do not resume operator provisioning."},
+    "dbc-integration": {"start": ["docs/dbc-transition.md", "solana/dbc/candidate.mjs", "solana/dbc/sdk.test.mjs"], "focused_check": "cd solana/dbc && npm ci --ignore-scripts && npm test && npm run test:runtime", "evidence_status": "Prior lifecycle proof at f7ea62476083b7b45e27a7267eb097580bda5e88 passed 46 checks and 29 executed groups. Follow dbc-fee-controller for program custody instead of repeating that completed milestone."},
+    "dbc-fee-controller": {"start": ["docs/dbc-fee-controller.md", "solana/programs/kydos_launchpad/src/dbc_fees.rs", "solana/dbc/fee-controller.mjs"], "only_if_needed": ["solana/dbc/fee-runtime.mjs", "solana/dbc/controller.test.mjs", ".github/workflows/dbc-fee-controller.yml", "src/lib/solana/idl/kydos_launchpad.json"], "focused_check": "Use the DBC fee controller workflow: locked Rust build, generated IDL, executed fee-runtime.mjs, seven controller.test.mjs checks and compatibility. Runtime is loopback only.", "evidence_status": "a869fb9 passed controller build and 23 executed groups. The generated browser-IDL completion must pass its own exact-head CI before merge readiness."}
+  },
+  "unfinished_work": [{
+    "id": "library-and-build-spec",
+    "status": "partial-not-active-in-this-milestone",
+    "completed_evidence": {"retrieval_implementation_delivery_sha": "f900d6d296a94e67b40894b381bfaaf80dc45f1e", "reference_tests_commit": "0a94da3e33b815f405988f490e89728666de8240", "ci_wiring_commit": "cea16c134d763fea12ca9c2be5d2501d25a21d07", "partial_index_commit": "e683d20589587aa2601828bf519b162189a80265"},
+    "next_action": "Prior library inventory remains incomplete and is not resumed here; do not infer full library review.",
+    "inventory": {"status": "not-completely-enumerated", "next_offset": 0, "complete": false},
+    "documents": [],
+    "document_cursor_shape": {"id_or_resolved_url": "required", "content_sha256": "required", "reviewed_ranges": [], "next_offset": 0, "complete": false, "finding_location": "docs/reference-index.md#section"},
+    "cursor_rules": "Store actual returned offsets/hashes only; restart the affected document on hash mismatch."
+  }],
+  "verification": {
+    "source_commit": "f32b8fe45606f1f623b2974bc74dd70ac86ba53a",
+    "base_commit": "2e361e82972a8aa0e6af137e205c611b92c7112c",
+    "local_counts": {
+      "frontend": 201,
+      "backend": 60,
+      "tooling": 20,
+      "dbc": 9,
+      "historical": 117,
+      "node_tests": 29,
+      "deno_tests": 5,
+      "frontend_contracts": 5,
+      "solana_tests": 144,
+      "dbc_sdk_tests": 46
+    },
+    "checks": [
+      "Composite typecheck passed locally with zero diagnostics",
+      "Node and Deno behavioral/negative contract tests pass",
+      "Lint and production build pass"
+    ],
+    "limitations": [
+      "Exact delivery commit CI not yet established",
+      "Not a full strict-mode or third-party-code audit",
+      "Historical/nondeployed code remains explicitly inventoried but unchecked",
+      "No deployed Base44 runtime verification or public-chain execution",
+      "Trading/indexing/automation and mainnet release acceptance remain unfinished"
+    ]
+  },
+  "merged_revert": {"pull_request": "https://github.com/doji0x/kydosv1/pull/29", "head_sha": "9a9d38e49b64e01b7b16a24961610f632d134cf9", "merge_sha": "221180adfb065382463119436f8ff8cddbd65854", "observed_status": "merged", "decision": "Reverted operator scripts remain absent; DBC selected."},
+  "previous_delivery": {"id": "atomic-protected-graduation-reverted-by-owner", "revert_commit": "111a75acc8c172b66bf8cedbc4af7eebe1f6a0b7", "status": "Existing custom migration work is no longer selected. Do not resume operator provisioning."},
+  "maintenance": "Update at a bounded milestone. Preserve unrelated work, do not restart completed tests, and do not present unresolved checks as passed."
+}

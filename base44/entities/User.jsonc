@@ -1,0 +1,15 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "handle": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    }
+  }
+}

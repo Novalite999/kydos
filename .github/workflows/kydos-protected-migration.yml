@@ -1,0 +1,29 @@
+name: Protected migration evidence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'solana/**'
+      - 'src/lib/solana/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/kydos-protected-migration.yml'
+permissions:
+  contents: read
+jobs:
+  compatibility:
+    name: Existing launch compatibility and evidence tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - run: node --test solana/tests/protected-migration/*.test.mjs
+      - run: node solana/scripts/protected-migration/compatibility.mjs
+  # Historical public mainnet/devnet protected-route scans are retired. They
+  # did not validate the selected DBC route. Live DBC release verification is
+  # a separate operator-owned, read-only mainnet check, not PR test traffic.

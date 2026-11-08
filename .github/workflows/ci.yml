@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Maintained-source typecheck, lint and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - uses: denoland/setup-deno@v2
+        with: {deno-version: '2.9.7'}
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm --prefix solana/dbc ci --ignore-scripts --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run test:types
+      - run: node --test tests/mainnet-network.test.mjs
+      - run: npm run lint
+      - run: node --test tests/market-discovery.test.mjs tests/market-candles.test.mjs
+      - run: npm run build

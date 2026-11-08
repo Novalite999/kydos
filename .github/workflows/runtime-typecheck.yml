@@ -1,0 +1,60 @@
+name: Backend and tooling typecheck
+on:
+  push:
+    branches: [main]
+    paths: ['base44/**', '_shared/**', 'astraChat/**', 'astraAudit/**', 'archive/**', 'scripts/**', 'solana/**', 'typechecks/**', 'tests/**', 'package*.json', '*.config.js', '.github/workflows/runtime-typecheck.yml']
+  pull_request:
+    branches: [main]
+    paths: ['base44/**', '_shared/**', 'astraChat/**', 'astraAudit/**', 'archive/**', 'scripts/**', 'solana/**', 'typechecks/**', 'tests/**', 'package*.json', '*.config.js', '.github/workflows/runtime-typecheck.yml']
+permissions:
+  contents: read
+jobs:
+  backend:
+    name: Frozen backend and operational-tooling contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      DENO_DIR: /tmp/kydos-deno-cache
+      DENO_NO_PACKAGE_JSON: '1'
+      NO_COLOR: '1'
+      WS_NO_BUFFER_UTIL: '1'
+      WS_NO_UTF_8_VALIDATE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0'}
+      - uses: denoland/setup-deno@v2
+        with: {deno-version: '2.9.7'}
+      - name: Install existing npm locks without dependency upgrades
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm --prefix solana/dbc ci --ignore-scripts --no-audit --no-fund
+      - name: Check maintained backend and tooling with frozen dependencies
+        run: |
+          set -euo pipefail
+          mkdir -p runtime-check-results
+          npm run typecheck:backend 2>&1 | tee runtime-check-results/backend.txt
+          npm run typecheck:tooling 2>&1 | tee runtime-check-results/tooling.txt
+          npm run typecheck:coverage 2>&1 | tee runtime-check-results/coverage.txt
+      - name: Test validation, deadlines, commit preconditions and coverage guards
+        run: |
+          set -euo pipefail
+          npm run test:backend 2>&1 | tee runtime-check-results/node-tests.txt
+      - name: Execute Deno SDK and index contracts without network or secret access
+        run: |
+          set -euo pipefail
+          npm run test:backend-runtime 2>&1 | tee runtime-check-results/deno-tests.txt
+      - name: Record immutable source and tool versions
+        run: |
+          git diff --exit-code
+          git rev-parse HEAD > runtime-check-results/source-commit.txt
+          node --version > runtime-check-results/versions.txt
+          deno --version >> runtime-check-results/versions.txt
+          sha256sum package-lock.json solana/dbc/package-lock.json typechecks/deno.lock > runtime-check-results/lock-hashes.txt
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: backend-tooling-evidence
+          retention-days: 7
+          path: runtime-check-results/

@@ -1,0 +1,105 @@
+{
+  "name": "AstraMessage",
+  "type": "object",
+  "properties": {
+    "requestId": {
+      "type": "string"
+    },
+    "conversationId": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "assistant",
+        "activity"
+      ],
+      "default": "user"
+    },
+    "content": {
+      "type": "string"
+    },
+    "turn": {
+      "type": "number"
+    },
+    "step": {
+      "type": "number"
+    },
+    "toolName": {
+      "type": "string"
+    },
+    "detail": {
+      "type": "string"
+    },
+    "durationMs": {
+      "type": "number"
+    },
+    "repo": {
+      "type": "string"
+    },
+    "activityType": {
+      "type": "string",
+      "enum": [
+        "tool"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "completed",
+        "failed"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "detailType": {
+      "type": "string",
+      "enum": [
+        "file",
+        "tree",
+        "reference",
+        "none"
+      ]
+    },
+    "detailRef": {
+      "type": "string"
+    },
+    "trace_uri": {
+      "type": "string",
+      "description": "Private turn transcript for administrator-reviewed training export; excludes internal reasoning."
+    },
+    "prompt_version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "conversationId",
+    "role",
+    "content"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
