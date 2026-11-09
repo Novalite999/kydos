@@ -24,7 +24,7 @@ async function gecko(path, fetchImpl) {
     const res = await fetchImpl(`${API}${path}`, { headers: HEADERS, signal: controller.signal });
     if (res.status === 429) throw new CandleError('rate_limited', 'Chart provider is busy. Retrying shortly.', 503, 30);
     if (res.status === 404) return null;
-    if (!res.ok) throw new CandleError('upstream', `Chart provider error (${res.status}).`, 503, 60);
+    if (!res.ok) throw new CandleError('upstream', `Chart provider error (${res.status}) for ${path.split('?')[0]}.`, 503, 60);
     return await res.json();
   } catch (error) {
     if (error instanceof CandleError) throw error;
@@ -36,7 +36,7 @@ async function gecko(path, fetchImpl) {
 export async function topPool(mint, { fetchImpl = fetch, now = Date.now() } = {}) {
   const hit = cached(pools, mint, POOL_TTL, now);
   if (hit !== undefined) return hit;
-  const body = await gecko(`/tokens/${mint}/pools?page=1&sort=h24_volume_usd_desc`, fetchImpl);
+  const body = await gecko(`/tokens/${mint}/pools?page=1`, fetchImpl);
   const list = (body?.data || [])
     .map(item => ({ address: item?.attributes?.address, name: item?.attributes?.name,
       liquidity: Number(item?.attributes?.reserve_in_usd) || 0, volume: Number(item?.attributes?.volume_usd?.h24) || 0 }))

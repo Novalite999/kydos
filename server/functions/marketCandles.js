@@ -18,6 +18,7 @@ export async function readCandles(input, entities, deps = {}) {
   } catch (error) {
     // Once a chart is pinned to a pool, switching sources mid-session would mix prices.
     if (input.pool) throw error;
+    console.warn('GeckoTerminal candles unavailable, using sampled prices:', input.mint, input.interval, error.code || '', error.message);
     return sampled();
   }
 }
