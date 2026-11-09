@@ -2,6 +2,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readCandles } from '../server/functions/marketCandles.js';
 import { CandleError } from '../server/shared/marketCandles.js';
+import { PGlite } from '@electric-sql/pglite';
+import { setTestClient } from '../server/db.js';
+import { clearSharedMemory } from '../server/shared/sharedCache.js';
+import { beforeEach } from 'node:test';
+
+process.env.DATABASE_URL ||= 'postgres://test';
+const db = new PGlite();
+setTestClient({ query: async (text, params) => (await db.query(text, params)).rows });
+// Each test starts with an empty shared cache (memory and database).
+beforeEach(async () => { clearSharedMemory(); await db.query("DELETE FROM entities WHERE type = 'ProviderCache'").catch(() => {}); });
 
 const mint = 'So11111111111111111111111111111111111111112';
 const pool = 'Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE';
@@ -26,7 +36,7 @@ test('uses the most liquid GeckoTerminal pool and returns ascending candles with
     { address: 'So1ana1111111111111111111111111111111111112', name: 'thin', reserve: '10', volume: '90000000' },
     { address: 'HBARso1111111111111111111111111111111111112', name: 'HBAR / SOL', reserve: '40000000', volume: '20000' },
     { address: pool, name: 'SOL / USDC', reserve: '9000000', volume: '50000000' }] });
-  const page = await readCandles({ mint, interval: '4h', pool: null, before: null }, noSamples, { fetchImpl, now: now + 1 });
+  const page = await readCandles({ mint, interval: '4h', pool: null, before: null }, noSamples, { fetchImpl, now: now + 1, retryDelay: 0 });
   assert.equal(page.pool.address, pool);
   assert.equal(page.source, 'GeckoTerminal');
   assert.deepEqual(page.candles.map(c => c.time), [t0 - 7200, t0 - 3600, t0]);
@@ -38,24 +48,24 @@ test('uses the most liquid GeckoTerminal pool and returns ascending candles with
 
 test('falls back to sampled Jupiter prices when GeckoTerminal has no pool or fails', async () => {
   const empty = fakeGecko({ pools: [] });
-  const page = await readCandles({ mint: 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN', interval: '1h', pool: null, before: null }, noSamples, { fetchImpl: empty.fetchImpl, now });
+  const page = await readCandles({ mint: 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN', interval: '1h', pool: null, before: null }, noSamples, { fetchImpl: empty.fetchImpl, now, retryDelay: 0 });
   assert.equal(page.pool.address, 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN');
   assert.equal(page.sampled, true);
   const down = fakeGecko({ status: 500 });
-  assert.equal((await readCandles({ mint: '7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr', interval: '1h', pool: null, before: null }, noSamples, { fetchImpl: down.fetchImpl, now })).sampled, true);
+  assert.equal((await readCandles({ mint: '7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr', interval: '1h', pool: null, before: null }, noSamples, { fetchImpl: down.fetchImpl, now, retryDelay: 0 })).sampled, true);
 });
 
 test('a chart pinned to a pool reports provider errors instead of switching source', async () => {
   const limited = fakeGecko({ status: 429 });
-  await assert.rejects(readCandles({ mint, interval: '1h', pool: 'Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zZ', before: null }, noSamples, { fetchImpl: limited.fetchImpl, now }), CandleError);
+  await assert.rejects(readCandles({ mint, interval: '1h', pool: 'Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zZ', before: null }, noSamples, { fetchImpl: limited.fetchImpl, now, retryDelay: 0 }), CandleError);
 });
 
 test('history pages stay before the cursor and expose the next cursor', async () => {
   const ohlcv = Array.from({ length: 300 }, (_, i) => [t0 - 3600 * (i + 10), 1, 1.1, 0.9, 1, 5]);
   const { fetchImpl, calls } = fakeGecko({ ohlcv });
   const before = t0 - 3600 * 10;
-  const page = await readCandles({ mint, interval: '1h', pool, before }, noSamples, { fetchImpl, now: now + 2 });
-  assert.ok(calls.at(-1).includes(`before_timestamp=${before + 1}`));
+  const page = await readCandles({ mint, interval: '1h', pool, before }, noSamples, { fetchImpl, now: now + 2, retryDelay: 0 });
+  assert.ok(calls.some(url => url.includes("/ohlcv/") && url.includes(`before_timestamp=${before + 1}`)));
   assert.ok(page.candles.every(c => c.time <= before));
   assert.equal(page.hasMore, true);
   assert.equal(page.nextBefore, page.candles[0].time - 1);
@@ -70,10 +80,39 @@ test('recent trades map buys and sells to the viewed token', async () => {
   const fetchImpl = async url => url.includes('/tokens/')
     ? Response.json({ data: [{ attributes: { address: pool, name: 'SOL / USDC', reserve_in_usd: '9000000', volume_usd: { h24: '1' } } }] })
     : Response.json({ data: [trade('sell', 5), trade('buy', 1), { attributes: { kind: 'buy', tx_hash: 'bad' } }] });
-  const result = await readRecentTrades(mint, { fetchImpl, now: now + 99 });
+  const result = await readRecentTrades(mint, { fetchImpl, now: now + 99, retryDelay: 0 });
   assert.deepEqual(result.trades.map(t => t.kind), ['buy', 'sell']);
   assert.equal(result.trades[0].amount, 0.8);
   assert.equal(result.trades[1].amount, 2);
   assert.equal(result.trades[1].price, 150);
   assert.equal(result.trades[0].usd, 120.5);
+});
+
+test('a busy provider serves the last real candles instead of sparse samples', async () => {
+  let busy = false, calls = 0;
+  const ohlcv = Array.from({ length: 120 }, (_, i) => [t0 - 3600 * i, 1, 1.1, 0.9, 1, 5]);
+  const fetchImpl = async url => {
+    calls++;
+    if (busy) return new Response('{}', { status: 429 });
+    if (url.includes('/tokens/')) return Response.json({ data: [{ attributes: { address: pool, name: 'SOL / USDC', reserve_in_usd: '9000000', volume_usd: { h24: '1' } } }] });
+    return Response.json({ data: { attributes: { ohlcv_list: ohlcv } } });
+  };
+  const first = await readCandles({ mint, interval: '1h', pool: null, before: null }, noSamples, { fetchImpl, now, retryDelay: 0 });
+  assert.equal(first.candles.length, 120);
+  const reused = await readCandles({ mint, interval: '1h', pool: null, before: null }, noSamples, { fetchImpl, now: now + 60_000, retryDelay: 0 });
+  assert.equal(reused.candles.length, 120);
+  assert.equal(calls, 2, 'second request within the TTL reuses the shared page');
+  busy = true;
+  const later = await readCandles({ mint, interval: '1h', pool: null, before: null }, noSamples, { fetchImpl, now: now + 3600_000, retryDelay: 0 });
+  assert.equal(later.sampled, false);
+  assert.equal(later.candles.length, 120);
+  assert.equal(later.stale, true);
+});
+
+test('a chart previously on sampled prices switches back to real candles', async () => {
+  const ohlcv = Array.from({ length: 50 }, (_, i) => [t0 - 86400 * i, 1, 1.1, 0.9, 1, 5]);
+  const { fetchImpl } = fakeGecko({ ohlcv });
+  const page = await readCandles({ mint, interval: '1d', pool: mint, before: null }, noSamples, { fetchImpl, now, retryDelay: 0 });
+  assert.equal(page.sampled, false);
+  assert.equal(page.candles.length, 50);
 });

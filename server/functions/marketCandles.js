@@ -6,7 +6,9 @@ import { readMarketRequest } from '../shared/marketRequest.js';
 // (pool = mint) is the fallback for tokens GeckoTerminal does not index yet.
 export async function readCandles(input, entities, deps = {}) {
   const sampled = () => readJupiterCandles(entities.JupiterCandle, { ...input, pool: input.mint });
-  if (input.pool === input.mint) return sampled();
+  // History pages for a sampled chart stay sampled; the latest page always retries real candles.
+  if (input.pool === input.mint && input.before) return sampled();
+  if (input.pool === input.mint) input = { ...input, pool: null };
   try {
     const pool = input.pool ? { address: input.pool, name: 'Top pool' } : await topPool(input.mint, deps);
     if (!pool) return sampled();

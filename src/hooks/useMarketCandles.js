@@ -1,6 +1,6 @@
 import { RequestError, requestStatus, requestRetryAfter } from '@/lib/requestError';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { candleQueryKey, MAX_CHART_CANDLES, mergeCandlePages, validateCandlePage } from '@/lib/marketCandles';
 
@@ -25,7 +25,7 @@ async function requestCandles(input, signal) {
 // source 'sampled' reads Kydos's stored Jupiter price samples (cheap, used by small sparklines);
 // the default reads exchange-pool candles from GeckoTerminal.
 export default function useMarketCandles(mint, interval = '1h', { enabled = true, compact = false, source = 'pool' } = {}) {
-  const client = useQueryClient(), identity = `${mint}:${interval}`;
+  const identity = `${mint}:${interval}`;
   const active = useRef(identity), historyRequest = useRef(null);
   active.current = identity;
   const [history, setHistory] = useState(null), [historyError, setHistoryError] = useState(''), [loadingOlder, setLoadingOlder] = useState(false);
@@ -37,7 +37,9 @@ export default function useMarketCandles(mint, interval = '1h', { enabled = true
   }, [identity]);
   const result = useQuery({
     queryKey: candleQueryKey(mint, interval, source), enabled,
-    queryFn: ({ signal }) => requestCandles({ mint, interval, pool: source === 'sampled' ? mint : (/** @type {import('@/types/application').CandlePage | undefined} */ (client.getQueryData(candleQueryKey(mint, interval, source))))?.pool.address || null }, signal),
+    // The latest page lets the server choose the best source (real pool candles when
+    // available); only older-history pages are pinned to the pool already on screen.
+    queryFn: ({ signal }) => requestCandles({ mint, interval, pool: source === 'sampled' ? mint : null }, signal),
     staleTime: 30_000, gcTime: 30 * 60_000,
     refetchInterval: query => Math.max(60_000, (query.state.data?.retryAfter || requestRetryAfter(query.state.error) || 0) * 1000),
     refetchIntervalInBackground: false, refetchOnWindowFocus: false,
