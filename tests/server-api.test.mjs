@@ -121,3 +121,16 @@ test('server functions run through the context shim', async () => {
   assert.equal((await call('/api/functions/astraChat', { method: 'POST', body: {} })).status, 503);
   assert.equal((await call('/api/functions/nope', { method: 'POST', body: {} })).status, 404);
 });
+
+test('service store supports the bulk writes used by candle sampling', async () => {
+  const { entityStore } = await import('../server/entities.js');
+  const store = entityStore('JupiterCandle');
+  const [a, b] = await store.bulkCreate([{ mint: 'm1', interval: '1m', is_closed: false, close: 1 }, { mint: 'm2', interval: '1m', is_closed: false, close: 2 }]);
+  const updated = await store.bulkUpdate([{ id: a.id, close: 5 }, { id: b.id, is_closed: true }]);
+  assert.equal(updated.length, 2);
+  assert.equal((await store.get(a.id)).close, 5);
+  assert.equal((await store.get(a.id)).mint, 'm1');
+  assert.equal((await store.get(b.id)).is_closed, true);
+  assert.equal((await store.filter({ is_closed: false })).length, 1);
+  assert.equal((await store.deleteMany({ id: { $in: [a.id, b.id] } })).deleted, 2);
+});

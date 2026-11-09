@@ -153,6 +153,21 @@ export function entityStore(type, { userId = null } = {}) {
       if (!row) throw Object.assign(new Error(`${type} ${id} not found`), { status: 404 });
       return toRow(row);
     },
+    // Applies a different patch to each row in one statement: [{ id, ...fields }].
+    async bulkUpdate(items) {
+      if (!Array.isArray(items)) throw bad('bulkUpdate needs an array.');
+      const patches = items.map(item => {
+        if (!item?.id) throw bad('bulkUpdate rows need an id.');
+        return { id: String(item.id), patch: cleanData(item) };
+      });
+      if (!patches.length) return [];
+      const rows = await run(
+        `UPDATE entities e SET data = e.data || (p.value -> 'patch'), updated_date = now()
+           FROM jsonb_array_elements($2::jsonb) p
+          WHERE e.type = $1 AND e.id = p.value ->> 'id' RETURNING e.*`,
+        [type, JSON.stringify(patches)]);
+      return rows.map(toRow);
+    },
     async delete(id) {
       await run('DELETE FROM entities WHERE type = $1 AND id = $2', [type, String(id)]);
       return { id, deleted: true };
