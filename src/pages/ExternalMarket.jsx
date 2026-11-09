@@ -59,7 +59,7 @@ export default function ExternalMarket() {
 
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="min-w-0 space-y-4">
-        <ExternalMarketChart key={mint} mint={mint} symbol={token.symbol} livePrice={token.price} supply={supply}/>
+        <ExternalMarketChart key={mint} mint={mint} symbol={token.symbol} livePrice={token.price} supply={supply} createdAt={profile.createdAt}/>
         <section aria-label="Market activity" className="overflow-hidden rounded-2xl border border-border bg-card/70">
           <div role="tablist" className="flex gap-1 border-b border-border px-3 pt-2">
             {[['trades', 'Trades'], ['info', 'About']].map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
