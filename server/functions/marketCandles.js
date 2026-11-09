@@ -24,9 +24,13 @@ export async function readCandles(input, entities, deps = {}) {
 
 export default async function(request, ctx) {
   const headers = { 'Cache-Control': 'no-store' };
-  if (request.method !== 'POST') return Response.json({ error: 'Method not allowed.' }, { status: 405, headers: { ...headers, Allow: 'POST' } });
+  if (!['GET', 'POST'].includes(request.method)) return Response.json({ error: 'Method not allowed.' }, { status: 405, headers: { ...headers, Allow: 'GET, POST' } });
   try {
-    const input = chartInput(await readMarketRequest(request));
+    const query = new URL(request.url).searchParams;
+    const raw = request.method === 'GET'
+      ? { mint: query.get('mint'), interval: query.get('interval'), pool: query.get('pool') || null, before: query.get('before') ? Number(query.get('before')) : null }
+      : await readMarketRequest(request);
+    const input = chartInput(raw);
     const entities = ctx.entities;
     if (!input.before) await noteChartInterest(entities.MarketChartInterest, input.mint).catch(() => { /* An optional interest hint must never block a public chart read. */ });
     return Response.json(await readCandles(input, entities), { headers });
