@@ -8,12 +8,12 @@ const pool = 'Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE';
 const now = 1_794_220_000_000;
 const t0 = Math.floor(now / 1000 / 3600) * 3600;
 
-function fakeGecko({ pools = [{ address: pool, name: 'SOL / USDC', reserve: '9000000' }], ohlcv, status = 200 } = {}) {
+function fakeGecko({ pools = [{ address: pool, name: 'SOL / USDC', reserve: '9000000', volume: '50000000' }], ohlcv, status = 200 } = {}) {
   const calls = [];
   const fetchImpl = async url => {
     calls.push(url);
     if (status !== 200) return new Response('{}', { status });
-    if (url.includes('/tokens/')) return Response.json({ data: pools.map(p => ({ attributes: { address: p.address, name: p.name, reserve_in_usd: p.reserve } })) });
+    if (url.includes('/tokens/')) return Response.json({ data: pools.map(p => ({ attributes: { address: p.address, name: p.name, reserve_in_usd: p.reserve, volume_usd: { h24: p.volume } } })) });
     return Response.json({ data: { attributes: { ohlcv_list: ohlcv } } });
   };
   return { fetchImpl, calls };
@@ -22,7 +22,10 @@ const noSamples = { JupiterCandle: { filter: async () => [] } };
 
 test('uses the most liquid GeckoTerminal pool and returns ascending candles with volume', async () => {
   const ohlcv = [[t0, 150, 152, 149, 151, 1000], [t0 - 3600, 148, 151, 147, 150, 2000], [t0 - 7200, 147, 146, 147.5, 148, 500]];
-  const { fetchImpl, calls } = fakeGecko({ ohlcv, pools: [{ address: 'So1ana1111111111111111111111111111111111112', name: 'small', reserve: '10' }, { address: pool, name: 'SOL / USDC', reserve: '9000000' }] });
+  const { fetchImpl, calls } = fakeGecko({ ohlcv, pools: [
+    { address: 'So1ana1111111111111111111111111111111111112', name: 'thin', reserve: '10', volume: '90000000' },
+    { address: 'HBARso1111111111111111111111111111111111112', name: 'HBAR / SOL', reserve: '40000000', volume: '20000' },
+    { address: pool, name: 'SOL / USDC', reserve: '9000000', volume: '50000000' }] });
   const page = await readCandles({ mint, interval: '4h', pool: null, before: null }, noSamples, { fetchImpl, now: now + 1 });
   assert.equal(page.pool.address, pool);
   assert.equal(page.source, 'GeckoTerminal');

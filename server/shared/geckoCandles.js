@@ -36,12 +36,16 @@ async function gecko(path, fetchImpl) {
 export async function topPool(mint, { fetchImpl = fetch, now = Date.now() } = {}) {
   const hit = cached(pools, mint, POOL_TTL, now);
   if (hit !== undefined) return hit;
-  const body = await gecko(`/tokens/${mint}/pools?page=1`, fetchImpl);
+  const body = await gecko(`/tokens/${mint}/pools?page=1&sort=h24_volume_usd_desc`, fetchImpl);
   const list = (body?.data || [])
-    .map(item => ({ address: item?.attributes?.address, name: item?.attributes?.name, liquidity: Number(item?.attributes?.reserve_in_usd) || 0 }))
+    .map(item => ({ address: item?.attributes?.address, name: item?.attributes?.name,
+      liquidity: Number(item?.attributes?.reserve_in_usd) || 0, volume: Number(item?.attributes?.volume_usd?.h24) || 0 }))
     .filter(pool => ADDRESS.test(pool.address || ''));
-  list.sort((a, b) => b.liquidity - a.liquidity);
-  const best = list[0] ? { address: list[0].address, name: list[0].name || 'Top pool', kind: 'pool', liquidityUsd: list[0].liquidity } : null;
+  // The busiest pool gives the densest, most accurate candles. A liquidity floor keeps
+  // out thin pools whose price can be pushed around; fall back to all pools if none pass.
+  const floor = list.filter(pool => pool.liquidity >= 10_000);
+  const ranked = (floor.length ? floor : list).sort((a, b) => b.volume - a.volume || b.liquidity - a.liquidity);
+  const best = ranked[0] ? { address: ranked[0].address, name: ranked[0].name || 'Top pool', kind: 'pool', liquidityUsd: ranked[0].liquidity } : null;
   return remember(pools, mint, best, now);
 }
 
