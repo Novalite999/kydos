@@ -2,12 +2,17 @@ import { secrets } from '../runtime.js';
 import { fetchMarketSnapshot, MarketProviderError } from '../shared/jupiterMarkets.js';
 import { writeJupiterCandles } from '../shared/jupiterCandleWriter.js';
 import { readMarketRequest } from '../shared/marketRequest.js';
+import { cachedSnapshot } from '../shared/snapshotCache.js';
 
 export default async function(request, ctx) {
   if (!['GET', 'POST'].includes(request.method)) return Response.json({ error: 'Method not allowed' }, { status: 405 });
   try {
     const input = request.method === 'POST' ? await readMarketRequest(request) : {};
-    const data = await fetchMarketSnapshot({ apiKey: secrets.get('JUP_API_KEY'), interval: input.interval || '24h', mint: input.mint ?? null });
+    const interval = input.interval || '24h', mint = input.mint ?? null;
+    const { snapshot: data, fresh } = await cachedSnapshot(`${interval}:${mint || ''}`,
+      () => fetchMarketSnapshot({ apiKey: secrets.get('JUP_API_KEY'), interval, mint }));
+    // Candle samples are written once per real provider fetch, not per visitor.
+    if (!fresh) return Response.json(data, { headers: { 'Cache-Control': 'no-store' } });
     const prices = Object.fromEntries(data.tokens.filter(token => Number.isFinite(token.price) && token.price > 0)
       .map(token => [token.mint, { price: token.price, blockId: token.priceBlockId }]));
     try {

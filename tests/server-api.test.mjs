@@ -134,3 +134,26 @@ test('service store supports the bulk writes used by candle sampling', async () 
   assert.equal((await store.filter({ is_closed: false })).length, 1);
   assert.equal((await store.deleteMany({ id: { $in: [a.id, b.id] } })).deleted, 2);
 });
+
+test('market snapshots are shared for 20s and the last good copy survives provider errors', async () => {
+  const { cachedSnapshot, clearSnapshotMemory } = await import('../server/shared/snapshotCache.js');
+  let clock = 1_000_000, calls = 0;
+  const now = () => clock;
+  const fetchOk = async () => { calls++; return { fetchedAt: clock, n: calls }; };
+  const first = await cachedSnapshot('24h:', fetchOk, now);
+  assert.equal(first.fresh, true);
+  clock += 5_000;
+  clearSnapshotMemory(); // a different server instance still finds it in the database
+  const second = await cachedSnapshot('24h:', fetchOk, now);
+  assert.equal(second.fresh, false);
+  assert.equal(second.snapshot.n, 1);
+  assert.equal(calls, 1);
+  clock += 30_000;
+  const failing = async () => { calls++; throw Object.assign(new Error('Jupiter is busy'), { code: 'rate_limited' }); };
+  const third = await cachedSnapshot('24h:', failing, now);
+  assert.equal(third.snapshot.n, 1, 'last good snapshot served on provider error');
+  clock += 20 * 60_000;
+  await assert.rejects(cachedSnapshot('24h:', failing, now), /busy/);
+  const parallel = await Promise.all([cachedSnapshot('1h:', fetchOk, now), cachedSnapshot('1h:', fetchOk, now)]);
+  assert.equal(parallel[0].snapshot.n, parallel[1].snapshot.n, 'simultaneous requests share one fetch');
+});

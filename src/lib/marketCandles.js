@@ -2,7 +2,7 @@ import { isSolanaMint } from './markets.js';
 
 export const CANDLE_INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'];
 export const MAX_CHART_CANDLES = 6000;
-export const candleQueryKey = (mint, interval) => ['external-candles', 'solana-mainnet', mint, interval, 'USD', 3];
+export const candleQueryKey = (mint, interval, source = 'pool') => ['external-candles', 'solana-mainnet', mint, interval, 'USD', source, 3];
 export function validateCandlePage(data, input) {
   if (!data || data.network !== 'solana-mainnet' || data.mint !== input.mint || data.interval !== input.interval || data.currency !== 'USD' || data.volumeCurrency !== 'USD' || !isSolanaMint(data.pool?.address) || (input.pool && input.pool !== data.pool.address) || data.before !== (input.before ?? null) || !Number.isFinite(data.fetchedAt) || !Array.isArray(data.candles) || data.candles.length > 300) throw new Error('The chart response did not match this market.');
   let previous = 0;
