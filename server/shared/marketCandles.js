@@ -6,10 +6,10 @@ export class CandleError extends Error {
 }
 export function chartInput(input, now = Date.now()) {
   if (!input || !isSolanaMint(input.mint) || !Object.hasOwn(CANDLE_SECONDS, input.interval)) throw new CandleError('invalid_input', 'A valid Solana mint and supported candle interval are required.', 400);
-  // The legacy pool field now pins the mint-keyed Jupiter stream, not an exchange pool.
-  if (input.pool != null && input.pool !== input.mint) throw new CandleError('invalid_input', 'This chart uses the mint-keyed Jupiter price stream.', 400);
+  // `pool` pins the market a chart is already showing: an exchange pool, or the mint for the sampled Jupiter stream.
+  if (input.pool != null && !isSolanaMint(input.pool)) throw new CandleError('invalid_input', 'Invalid pool address.', 400);
   if (input.before != null && (!Number.isSafeInteger(input.before) || input.before < 1 || input.before > Math.floor(now / 1000))) throw new CandleError('invalid_input', 'Invalid history cursor.', 400);
-  return { mint: input.mint, interval: input.interval, pool: input.mint, before: input.before ?? null };
+  return { mint: input.mint, interval: input.interval, pool: input.pool ?? null, before: input.before ?? null };
 }
 export async function noteChartInterest(entity, mint, now = Date.now()) {
   if (MARKET_CATALOG.some(token => token.mint === mint)) return;

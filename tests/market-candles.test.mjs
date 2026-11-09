@@ -7,7 +7,7 @@ import { validateCandlePage } from '../src/lib/marketCandles.js';
 
 const mint = MARKET_CATALOG[0].mint, first = 1790232480000;
 test('chart requests validate mint, interval, cursor and stream identity', () => {
-  assert.deepEqual(chartInput({ mint, interval: '1m' }, first), { mint, interval: '1m', pool: mint, before: null });
+  assert.deepEqual(chartInput({ mint, interval: '1m' }, first), { mint, interval: '1m', pool: null, before: null });
   for (const bad of [{ mint: 'SOL', interval: '1m' }, { mint, interval: '2m' }, { mint, interval: '1m', pool: 'different' }, { mint, interval: '1m', before: first }]) assert.throws(() => chartInput(bad, first), CandleError);
 });
 test('samples produce honest OHLC with multiple observations in one minute and no synthetic volume', () => {
