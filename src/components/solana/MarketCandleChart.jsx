@@ -13,7 +13,31 @@ export const CHART_TYPES = [
   { id: 'line', label: 'Line' },
   { id: 'area', label: 'Area' },
 ];
-const STORAGE_KEY = 'kydos.chartType';
+const STORAGE_KEY = 'kydos.chartType', INDICATOR_KEY = 'kydos.chartIndicators';
+export const INDICATORS = [
+  { id: 'volume', label: 'Volume' },
+  { id: 'ma20', label: 'MA 20', color: '#60a5fa' },
+  { id: 'ema50', label: 'EMA 50', color: '#c084fc' },
+];
+const readIndicators = () => { try { const v = JSON.parse(localStorage.getItem(INDICATOR_KEY)); return Array.isArray(v) ? v.filter(id => INDICATORS.some(i => i.id === id)) : ['volume']; } catch { return ['volume']; } };
+const saveIndicators = value => { try { localStorage.setItem(INDICATOR_KEY, JSON.stringify(value)); } catch { /* storage blocked */ } };
+// Simple and exponential moving averages of the close.
+export function movingAverage(candles, period, exponential = false) {
+  const out = [];
+  let sum = 0, ema = null;
+  const k = 2 / (period + 1);
+  candles.forEach((bar, i) => {
+    if (exponential) {
+      ema = ema == null ? bar.close : bar.close * k + ema * (1 - k);
+      if (i >= period - 1) out.push({ time: bar.time, value: ema });
+    } else {
+      sum += bar.close;
+      if (i >= period) sum -= candles[i - period].close;
+      if (i >= period - 1) out.push({ time: bar.time, value: sum / period });
+    }
+  });
+  return out;
+}
 const readType = () => { try { const v = localStorage.getItem(STORAGE_KEY); return CHART_TYPES.some(t => t.id === v) ? v : 'candles'; } catch { return 'candles'; } };
 const saveType = value => { try { localStorage.setItem(STORAGE_KEY, value); } catch { /* storage blocked */ } };
 
@@ -42,16 +66,18 @@ function addPriceSeries(chart, type, priceFormat) {
   return chart.addLineSeries({ ...common, color: ACCENT, lineWidth: 2 });
 }
 
-export default function MarketCandleChart({ candles, timeframe, seriesKey = timeframe, currency = 'SOL', volumeCurrency = 'SOL', onLoadOlder = undefined, canLoadOlder = false, livePrice = null }) {
+export default function MarketCandleChart({ candles, timeframe, seriesKey = timeframe, currency = 'SOL', volumeCurrency = 'SOL', onLoadOlder = undefined, canLoadOlder = false, livePrice = null, valueFormatter = null, toolbar = null }) {
   const container = useRef(null), api = useRef(null), previous = useRef([]), frame = useRef(null);
   const following = useRef(true), applying = useRef(false), history = useRef({ onLoadOlder, canLoadOlder }), bars = useRef(new Map());
   const [chartType, setChartType] = useState(readType);
+  const [indicators, setIndicators] = useState(readIndicators);
+  const showVolume = indicators.includes('volume');
   const shown = useMemo(() => chartType === 'heikin' ? heikinAshi(candles) : candles, [candles, chartType]);
   history.current = { onLoadOlder, canLoadOlder };
   bars.current = new Map(candles.map(bar => [bar.time, bar]));
   const [legend, setLegend] = useState(null), [follow, setFollow] = useState(true);
-  const formatPrice = useMemo(() => currency === 'USD' ? formatUsdPrice : formatSolPrice, [currency]);
-  const hasVolume = candles.some(bar => bar.volume != null);
+  const formatPrice = useMemo(() => valueFormatter || (currency === 'USD' ? formatUsdPrice : formatSolPrice), [currency, valueFormatter]);
+  const hasVolume = showVolume && candles.some(bar => bar.volume != null);
 
   useEffect(() => {
     const chart = createChart(container.current, {
@@ -68,6 +94,7 @@ export default function MarketCandleChart({ candles, timeframe, seriesKey = time
     const volume = chart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '', lastValueVisible: false, priceLineVisible: false });
     volume.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     const price = addPriceSeries(chart, chartType, priceFormat);
+    const overlays = INDICATORS.filter(item => item.color).map(item => [item.id, chart.addLineSeries({ color: item.color, lineWidth: 1, priceFormat, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false, visible: false })]);
     chart.subscribeCrosshairMove(event => setLegend(event.time == null ? null : bars.current.get(event.time) || null));
     chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
       if (!range || applying.current) return;
@@ -76,7 +103,7 @@ export default function MarketCandleChart({ candles, timeframe, seriesKey = time
       // Initial fit must not consume every history page. Load only after panning away from the latest bar.
       if (!following.current && range.from < 15 && history.current.canLoadOlder) history.current.onLoadOlder?.();
     });
-    api.current = { chart, price, volume };
+    api.current = { chart, price, volume, overlays: Object.fromEntries(overlays) };
     return () => { chart.remove(); api.current = null; previous.current = []; frame.current = null; };
   }, [formatPrice, chartType, hasVolume]);
 
@@ -88,9 +115,16 @@ export default function MarketCandleChart({ candles, timeframe, seriesKey = time
     applying.current = true;
     try {
       // Heikin-Ashi bars depend on their neighbours, so they are always redrawn.
+      const volumePoint = bar => hasVolume ? volumeBar(bar) : { time: bar.time };
       if (!reset && chartType !== 'heikin' && canUpdateLastCandle(previous.current, shown)) {
-        for (const bar of shown.slice(previous.current.length - 1)) { price.update(toPoint(bar)); volume.update(volumeBar(bar)); }
-      } else { price.setData(shown.map(toPoint)); volume.setData(shown.map(volumeBar)); }
+        for (const bar of shown.slice(previous.current.length - 1)) { price.update(toPoint(bar)); volume.update(volumePoint(bar)); }
+      } else { price.setData(shown.map(toPoint)); volume.setData(shown.map(volumePoint)); }
+      // Averages always use the real candles, not Heikin-Ashi bars.
+      const { overlays } = api.current;
+      overlays.ma20.applyOptions({ visible: indicators.includes('ma20') });
+      overlays.ema50.applyOptions({ visible: indicators.includes('ema50') });
+      overlays.ma20.setData(indicators.includes('ma20') ? movingAverage(candles, 20) : []);
+      overlays.ema50.setData(indicators.includes('ema50') ? movingAverage(candles, 50, true) : []);
       previous.current = shown; frame.current = identity;
       if (reset) {
         // Open on the most recent ~120 bars instead of squeezing all history in.
@@ -101,7 +135,7 @@ export default function MarketCandleChart({ candles, timeframe, seriesKey = time
       else if (wasFollowing) chart.timeScale().scrollToRealTime();
       else if (range) chart.timeScale().setVisibleRange(range);
     } finally { applying.current = false; }
-  }, [shown, timeframe, seriesKey, currency, formatPrice, chartType]);
+  }, [shown, candles, timeframe, seriesKey, currency, formatPrice, chartType, indicators, hasVolume]);
 
   useEffect(() => {
     if (!api.current || !Number.isFinite(livePrice) || livePrice <= 0) return;
@@ -114,6 +148,7 @@ export default function MarketCandleChart({ candles, timeframe, seriesKey = time
   const change = bar ? (bar.close - bar.open) / bar.open * 100 : null;
   const goLive = () => { following.current = true; setFollow(true); api.current?.chart.timeScale().scrollToRealTime(); };
   const pick = id => { setChartType(id); saveType(id); };
+  const toggleIndicator = id => setIndicators(list => { const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id]; saveIndicators(next); return next; });
   const vol = bar?.volume == null ? '—' : `${formatCompact(bar.volume, volumeCurrency === 'USD')}${volumeCurrency === 'USD' ? '' : ` ${volumeCurrency}`}`;
 
   return <div>
@@ -122,7 +157,15 @@ export default function MarketCandleChart({ candles, timeframe, seriesKey = time
         {CHART_TYPES.map(type => <button key={type.id} type="button" role="radio" aria-checked={chartType === type.id} onClick={() => pick(type.id)}
           className={`min-h-8 rounded-md px-2.5 text-xs ${chartType === type.id ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>{type.label}</button>)}
       </div>
-      <Button size="sm" variant="ghost" onClick={goLive} disabled={follow}>Follow latest</Button>
+      <div className="flex flex-wrap items-center gap-2">
+        {toolbar}
+        <div aria-label="Indicators" className="flex flex-wrap rounded-lg bg-background/70 p-1">
+          {INDICATORS.map(item => <button key={item.id} type="button" aria-pressed={indicators.includes(item.id)} onClick={() => toggleIndicator(item.id)}
+            className={`flex min-h-8 items-center gap-1.5 rounded-md px-2.5 text-xs ${indicators.includes(item.id) ? 'bg-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            {item.color && <span className="h-0.5 w-3 rounded" style={{ background: item.color }} aria-hidden/>}{item.label}</button>)}
+        </div>
+        <Button size="sm" variant="ghost" onClick={goLive} disabled={follow}>Follow latest</Button>
+      </div>
     </div>
     <div className="flex min-h-8 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 font-mono text-[11px] text-muted-foreground">
       {bar && <>

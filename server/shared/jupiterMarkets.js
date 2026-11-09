@@ -24,6 +24,32 @@ function cleanStats(raw = {}) {
     priceChange: numberOrNull(raw?.priceChange),
     volume: buyVolume === null || sellVolume === null ? null : nonnegative(buyVolume + sellVolume),
     buyVolume, sellVolume, buys: count(raw?.numBuys), sells: count(raw?.numSells), traders: count(raw?.numTraders),
+    netBuyers: Number.isSafeInteger(raw?.numNetBuyers) ? raw.numNetBuyers : null,
+    liquidityChange: numberOrNull(raw?.liquidityChange), volumeChange: numberOrNull(raw?.volumeChange),
+  };
+}
+const percent = value => numberOrNull(value) !== null && value >= 0 && value <= 100 ? value : null;
+const flag = value => typeof value === 'boolean' ? value : null;
+// Social links shown on the token page; only plain https links are kept.
+function socialUrl(value, hosts) {
+  const url = safeIcon(value);
+  if (!url) return null;
+  const host = new URL(url).hostname.replace(/^www\./, '');
+  return !hosts || hosts.some(h => host === h || host.endsWith(`.${h}`)) ? url : null;
+}
+// Extra Jupiter Tokens V2 fields for the token detail page (like jup.ag/tokens/<mint>).
+function tokenProfile(raw) {
+  const audit = raw.audit || {};
+  return {
+    twitter: socialUrl(raw.twitter, ['x.com', 'twitter.com']), telegram: socialUrl(raw.telegram, ['t.me', 'telegram.me']), website: socialUrl(raw.website),
+    launchpad: text(raw.launchpad, 40) || null, createdAt: isoDate(raw.firstPool?.createdAt), dev: isSolanaMint(raw.dev) ? raw.dev : null,
+    circSupply: nonnegative(raw.circSupply), totalSupply: nonnegative(raw.totalSupply),
+    organicScore: numberOrNull(raw.organicScore), organicScoreLabel: text(raw.organicScoreLabel, 16) || null,
+    tags: Array.isArray(raw.tags) ? raw.tags.filter(tag => typeof tag === 'string').map(tag => text(tag, 32)).slice(0, 8) : [],
+    audit: {
+      mintAuthorityDisabled: flag(audit.mintAuthorityDisabled), freezeAuthorityDisabled: flag(audit.freezeAuthorityDisabled),
+      topHoldersPercentage: percent(audit.topHoldersPercentage), devBalancePercentage: percent(audit.devBalancePercentage),
+    },
   };
 }
 export function emptyMarketToken(identity) {
@@ -32,6 +58,7 @@ export function emptyMarketToken(identity) {
     decimals: null, tokenProgram: null, price: null, liquidity: null, marketCap: null, fdv: null, holders: null,
     verified: false, suspicious: false, available: false, providerUpdatedAt: null, priceBlockId: null,
     stats: Object.fromEntries(MARKET_INTERVALS.map(interval => [interval, cleanStats()])),
+    profile: null,
   };
 }
 export function normalizeJupiterToken(raw) {
@@ -47,6 +74,7 @@ export function normalizeJupiterToken(raw) {
     verified: raw.isVerified === true, suspicious: raw.audit?.isSus === true, available: true,
     providerUpdatedAt: isoDate(raw.updatedAt), priceBlockId: count(raw.priceBlockId),
     stats: Object.fromEntries(MARKET_INTERVALS.map(interval => [interval, cleanStats(raw[`stats${interval}`])])),
+    profile: tokenProfile(raw),
   };
 }
 

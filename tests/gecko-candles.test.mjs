@@ -60,3 +60,20 @@ test('history pages stay before the cursor and expose the next cursor', async ()
   assert.equal(page.hasMore, true);
   assert.equal(page.nextBefore, page.candles[0].time - 1);
 });
+
+test('recent trades map buys and sells to the viewed token', async () => {
+  const { readRecentTrades } = await import('../server/shared/geckoTrades.js');
+  const sig = '5'.repeat(88), wallet = '9'.repeat(44), other = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+  const trade = (kind, minutesAgo) => ({ attributes: { kind, block_timestamp: new Date(now - minutesAgo * 60000).toISOString(), tx_hash: sig, tx_from_address: wallet, volume_in_usd: '120.5',
+    from_token_address: kind === 'buy' ? other : mint, to_token_address: kind === 'buy' ? mint : other,
+    from_token_amount: kind === 'buy' ? '120.5' : '2', to_token_amount: kind === 'buy' ? '0.8' : '120', price_from_in_usd: kind === 'buy' ? '1' : '150', price_to_in_usd: kind === 'buy' ? '150' : '1' } });
+  const fetchImpl = async url => url.includes('/tokens/')
+    ? Response.json({ data: [{ attributes: { address: pool, name: 'SOL / USDC', reserve_in_usd: '9000000', volume_usd: { h24: '1' } } }] })
+    : Response.json({ data: [trade('sell', 5), trade('buy', 1), { attributes: { kind: 'buy', tx_hash: 'bad' } }] });
+  const result = await readRecentTrades(mint, { fetchImpl, now: now + 99 });
+  assert.deepEqual(result.trades.map(t => t.kind), ['buy', 'sell']);
+  assert.equal(result.trades[0].amount, 0.8);
+  assert.equal(result.trades[1].amount, 2);
+  assert.equal(result.trades[1].price, 150);
+  assert.equal(result.trades[0].usd, 120.5);
+});

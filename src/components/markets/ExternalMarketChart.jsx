@@ -1,5 +1,5 @@
 import { requestStatus } from '@/lib/requestError';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MarketCandleChart from '@/components/solana/MarketCandleChart';
@@ -7,17 +7,30 @@ import useMarketCandles from '@/hooks/useMarketCandles';
 import { CANDLE_INTERVALS } from '@/lib/marketCandles';
 import { ageLabel, formatPrice } from '@/lib/markets';
 
-export default function ExternalMarketChart({ mint, symbol, livePrice }) {
-  const [interval, setInterval] = useState('1h');
-  const feed = useMarketCandles(mint, interval), { page, candles } = feed;
+const formatCap = value => typeof value === 'number' && Number.isFinite(value) && value > 0
+  ? `$${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: value >= 1e9 ? 2 : 1 }).format(value)}` : '—';
+
+export default function ExternalMarketChart({ mint, symbol, livePrice, supply = null }) {
+  const [interval, setInterval] = useState('15m');
+  const [mode, setMode] = useState('price');
+  const feed = useMarketCandles(mint, interval), { page } = feed;
+  // Market cap view = price × circulating supply (as on Jupiter's Price / MC toggle).
+  const capMode = mode === 'mcap' && supply > 0;
+  const candles = useMemo(() => capMode
+    ? feed.candles.map(bar => ({ ...bar, open: bar.open * supply, high: bar.high * supply, low: bar.low * supply, close: bar.close * supply }))
+    : feed.candles, [feed.candles, capMode, supply]);
+  const modeToggle = supply > 0 ? <div aria-label="Price or market cap" className="flex rounded-lg bg-background/70 p-1">
+    {[['price', 'Price'], ['mcap', 'MCap']].map(([id, label]) => <button key={id} type="button" aria-pressed={mode === id} onClick={() => setMode(id)}
+      className={`min-h-8 rounded-md px-2.5 text-xs ${mode === id ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>{label}</button>)}
+  </div> : null;
   const signIn = [401, 403].includes(requestStatus(feed.error));
-  return <section aria-label={`${symbol} interactive price chart`} className="mb-5 min-w-0 overflow-hidden rounded-2xl border border-border bg-card/70">
+  return <section aria-label={`${symbol} interactive price chart`} className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card/70">
     <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
-      <div><h2 className="text-sm font-semibold">{symbol} / USD <span className="ml-2 font-mono text-primary">{formatPrice(livePrice ?? candles.at(-1)?.close)}</span></h2><p className="mt-1 text-[11px] text-muted-foreground">{page ? `${page.pool.name} · ${page.sampled ? 'sampled prices' : 'trades'} · ${ageLabel(page.fetchedAt, feed.now)}` : 'Price history'}</p></div>
+      <div><h2 className="text-sm font-semibold">{symbol} / USD <span className="ml-2 font-mono text-primary">{capMode ? formatCap((livePrice ?? feed.candles.at(-1)?.close) * supply) : formatPrice(livePrice ?? candles.at(-1)?.close)}</span></h2><p className="mt-1 text-[11px] text-muted-foreground">{page ? `${page.pool.name} · ${page.sampled ? 'sampled prices' : 'trades'} · ${ageLabel(page.fetchedAt, feed.now)}` : 'Price history'}</p></div>
       <div className="flex max-w-full flex-wrap items-center gap-2"><div aria-label="Candle interval" className="flex rounded-lg bg-background/70 p-1">{CANDLE_INTERVALS.map(item => <button key={item} type="button" aria-pressed={item === interval} onClick={() => setInterval(item)} className={`min-h-9 rounded-md px-2.5 text-xs ${interval === item ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>{item}</button>)}</div><button type="button" aria-label="Refresh chart" disabled={feed.isFetching} onClick={() => feed.refetch()} className="flex h-10 w-10 items-center justify-center rounded-lg border border-border disabled:opacity-40"><RefreshCw className={`h-3.5 w-3.5 ${feed.isFetching ? 'animate-spin' : ''}`}/></button></div>
     </header>
     {feed.stale && candles.length > 0 && <p role="status" className="border-b border-amber-400/20 bg-amber-400/5 px-4 py-2 text-xs text-amber-200">Chart updates are delayed. Showing saved candles. {page?.warning || feed.error?.message}</p>}
-    {candles.length > 0 ? <MarketCandleChart candles={candles} timeframe={interval} seriesKey={`jupiter:${mint}:${interval}:USD`} livePrice={livePrice} currency="USD" volumeCurrency="USD" onLoadOlder={feed.loadOlder} canLoadOlder={feed.hasMore && !feed.loadingOlder && !feed.historyError}/> : <div className="flex min-h-[390px] flex-col items-center justify-center gap-3 px-6 text-center"><p role="status" className="text-sm text-muted-foreground">{feed.isPending && !feed.error ? 'Loading price history…' : feed.error?.message || 'Price history starts with new Jupiter samples. The first sample will appear after collection runs.'}</p>{signIn ? <Link to="/login" className="text-sm text-primary underline">Sign in</Link> : <button type="button" disabled={feed.isFetching} onClick={() => feed.refetch()} className="rounded-lg border border-border px-4 py-2 text-xs disabled:opacity-40">{feed.isFetching ? 'Loading…' : 'Retry chart'}</button>}</div>}
+    {candles.length > 0 ? <MarketCandleChart candles={candles} timeframe={interval} seriesKey={`${mint}:${interval}:${capMode ? 'mcap' : 'price'}`} livePrice={capMode && livePrice ? livePrice * supply : livePrice} currency="USD" volumeCurrency="USD" valueFormatter={capMode ? formatCap : null} toolbar={modeToggle} onLoadOlder={feed.loadOlder} canLoadOlder={feed.hasMore && !feed.loadingOlder && !feed.historyError}/> : <div className="flex min-h-[390px] flex-col items-center justify-center gap-3 px-6 text-center"><p role="status" className="text-sm text-muted-foreground">{feed.isPending && !feed.error ? 'Loading price history…' : feed.error?.message || 'Price history starts with new Jupiter samples. The first sample will appear after collection runs.'}</p>{signIn ? <Link to="/login" className="text-sm text-primary underline">Sign in</Link> : <button type="button" disabled={feed.isFetching} onClick={() => feed.refetch()} className="rounded-lg border border-border px-4 py-2 text-xs disabled:opacity-40">{feed.isFetching ? 'Loading…' : 'Retry chart'}</button>}</div>}
     <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-[11px] text-muted-foreground"><div><p>{page?.sampled === false
         ? <>Candles from <a href={`https://www.geckoterminal.com/solana/pools/${page.pool.address}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">GeckoTerminal</a> · {candles.length} candles · volume in USD</>
         : page ? <><a href={`https://jup.ag/tokens/${mint}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Jupiter Price V3</a> · {candles.length} sampled candles · volume unavailable</> : 'Loading market data'}</p>

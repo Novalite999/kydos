@@ -19,3 +19,24 @@ test('direct discovery uses token metadata but never falls back to an unreliable
   assert.deepEqual(snapshot.trending['24h'], []);
   assert.equal(selectMarkets(snapshot, readMarketOptions(new URLSearchParams('tab=majors'))).length > 0, true);
 });
+test('token profile keeps safe socials, audit and supply fields from Jupiter', async () => {
+  const { normalizeJupiterToken } = await import('../server/shared/jupiterMarkets.js');
+  const token = normalizeJupiterToken({
+    id: '9cRCn9rGT8V2imeM2BaKs13yhMEais3ruM3rPvTGpump', name: 'The Black Bull', symbol: 'ANSEM', decimals: 6,
+    tokenProgram: 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb', usdPrice: 0.05, mcap: 52e6, circSupply: 999e6, totalSupply: 1e9,
+    twitter: 'https://x.com/blackbullsol', telegram: 'https://t.me/blackbullsol', website: 'https://blackbullsol.com', launchpad: 'pump.fun',
+    firstPool: { createdAt: '2026-07-01T00:00:00Z' }, organicScore: 95.8, organicScoreLabel: 'high',
+    audit: { mintAuthorityDisabled: true, freezeAuthorityDisabled: true, topHoldersPercentage: 18.5, devBalancePercentage: 400 },
+    stats24h: { priceChange: 22, buyVolume: 5, sellVolume: 5, numBuys: 1, numSells: 2, numTraders: 3, numNetBuyers: -7 },
+  });
+  assert.equal(token.profile.twitter, 'https://x.com/blackbullsol');
+  assert.equal(token.profile.telegram, 'https://t.me/blackbullsol');
+  assert.equal(token.profile.launchpad, 'pump.fun');
+  assert.equal(token.profile.circSupply, 999e6);
+  assert.equal(token.profile.audit.mintAuthorityDisabled, true);
+  assert.equal(token.profile.audit.devBalancePercentage, null, 'out-of-range percentages are dropped');
+  assert.equal(token.stats['24h'].netBuyers, -7);
+  const spoof = normalizeJupiterToken({ id: '9cRCn9rGT8V2imeM2BaKs13yhMEais3ruM3rPvTGpump', decimals: 6, tokenProgram: 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb', twitter: 'https://evil.example/x.com', telegram: 'javascript:alert(1)' });
+  assert.equal(spoof.profile.twitter, null);
+  assert.equal(spoof.profile.telegram, null);
+});

@@ -13,6 +13,7 @@ export const FUNCTIONS = {
   listGithubReleases: () => import('./listGithubReleases.js'),
   marketCandles: () => import('./marketCandles.js'),
   marketDiscovery: () => import('./marketDiscovery.js'),
+  marketTrades: () => import('./marketTrades.js'),
   pollJupiterPrices: () => import('./pollJupiterPrices.js'),
   solanaBoard: () => import('./solanaBoard.js'),
   solanaRpc: () => import('./solanaRpc.js'),

@@ -11,14 +11,14 @@ const POOL_TTL = 30 * 60_000, PAGE_TTL = 20_000, HISTORY_TTL = 10 * 60_000;
 const pools = new Map(), pages = new Map();
 
 const ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-const cached = (map, key, ttl, now) => { const hit = map.get(key); return hit && now - hit.at < ttl ? hit.value : undefined; };
-function remember(map, key, value, now) {
+export const cached = (map, key, ttl, now) => { const hit = map.get(key); return hit && now - hit.at < ttl ? hit.value : undefined; };
+export function remember(map, key, value, now) {
   map.set(key, { value, at: now });
   if (map.size > 500) map.delete(map.keys().next().value);
   return value;
 }
 
-async function gecko(path, fetchImpl) {
+export async function gecko(path, fetchImpl) {
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 10_000);
   try {
     const res = await fetchImpl(`${API}${path}`, { headers: HEADERS, signal: controller.signal });
